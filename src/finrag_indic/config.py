@@ -29,6 +29,31 @@ class Settings(BaseSettings):
     llm_model: str | None = None
     llm_api_key: str | None = Field(default=None, repr=False)
 
+    embedding_model: str = "BAAI/bge-m3"
+    embedding_revision: str = "5617a9f61b028005a4858fdac845db406aefb181"
+    embedding_device: Literal["cpu", "mps", "cuda"] = "cpu"
+    embedding_batch_size: int = Field(default=8, ge=1, le=256)
+    chunk_size: int = Field(default=450, ge=50, le=2000)
+    chunk_overlap: int = Field(default=75, ge=0, le=500)
+    min_chunk_tokens: int = Field(default=20, ge=1, le=500)
+    retrieval_top_k: int = Field(default=5, ge=1, le=100)
+
+    @field_validator("chunk_overlap")
+    @classmethod
+    def overlap_must_be_smaller_than_chunk(cls, value: int, info) -> int:  # type: ignore[no-untyped-def]
+        chunk_size = info.data.get("chunk_size", 450)
+        if value >= chunk_size:
+            raise ValueError("chunk_overlap must be smaller than chunk_size")
+        return value
+
+    @field_validator("min_chunk_tokens")
+    @classmethod
+    def minimum_chunk_must_fit(cls, value: int, info) -> int:  # type: ignore[no-untyped-def]
+        chunk_size = info.data.get("chunk_size", 450)
+        if value > chunk_size:
+            raise ValueError("min_chunk_tokens cannot exceed chunk_size")
+        return value
+
     @field_validator("llm_model", "llm_api_key", mode="before")
     @classmethod
     def empty_string_to_none(cls, value: object) -> object:

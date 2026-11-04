@@ -1,0 +1,45 @@
+[
+  {
+    "question_id": "pilot-en-upi-pin",
+    "language": "en",
+    "question": "What is a UPI PIN and should it be shared with anyone?",
+    "status": "exploratory_unverified",
+    "gold_chunk_ids": []
+  },
+  {
+    "question_id": "pilot-hi-upi-failure",
+    "language": "hi",
+    "question": "UPI भुगतान असफल होने के बाद खाता डेबिट हो जाए तो क्या करना चाहिए?",
+    "status": "exploratory_unverified",
+    "gold_chunk_ids": []
+  },
+  {
+    "question_id": "pilot-ta-upi-safety",
+    "language": "ta",
+    "question": "UPI PIN-ஐ வேறு ஒருவருடன் பகிரலாமா?",
+    "status": "exploratory_unverified",
+    "gold_chunk_ids": []
+  },
+  {
+    "question_id": "pilot-en-diversification",
+    "language": "en",
+    "question": "How does diversification help reduce investment risk?",
+    "status": "exploratory_unverified",
+    "gold_chunk_ids": []
+  },
+  {
+    "question_id": "pilot-hi-risk-return",
+    "language": "hi",
+    "question": "निवेश में जोखिम और रिटर्न के बीच क्या संबंध है?",
+    "status": "exploratory_unverified",
+    "gold_chunk_ids": []
+  },
+  {
+    "question_id": "pilot-ta-ponzi-warning",
+    "language": "ta",
+    "question": "போன்சி முதலீட்டு திட்டங்களின் எச்சரிக்கை அறிகுறிகள் என்ன?",
+    "status": "exploratory_unverified",
+    "gold_chunk_ids": []
+  }
+]
+

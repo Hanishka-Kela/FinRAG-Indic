@@ -1,0 +1,15 @@
+{
+  "dataset_id": "agenticclass/fabric",
+  "revision": "d8476ea6a9081f7dec4852200b379bfd1213ad47",
+  "source_url": "https://huggingface.co/datasets/agenticclass/fabric/resolve/d8476ea6a9081f7dec4852200b379bfd1213ad47/data/train-00000-of-00001.parquet",
+  "retrieved_at": "2026-11-04T17:54:28.522438Z",
+  "file_sha256": "bcc8341d559d6c73f023104a562dfcaf74da9ad14ddade8571c93cbfbd28f8ee",
+  "record_count": 204,
+  "inspected_question_ids": [
+    "adv_001",
+    "adv_002"
+  ],
+  "missing_source_description_count": 10,
+  "verification_status": "unreviewed"
+}
+

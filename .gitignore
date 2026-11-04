@@ -26,6 +26,8 @@ data/processed/*
 !data/processed/.gitkeep
 data/indexes/*
 !data/indexes/.gitkeep
+data/models/*
+!data/models/.gitkeep
 results/raw/*
 !results/raw/.gitkeep
 results/aggregate/*

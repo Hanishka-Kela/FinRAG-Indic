@@ -17,13 +17,31 @@ experimentally validated behavior remain distinct.
 - Replaceable text-provider boundary and deterministic test provider.
 - Unit and integration test infrastructure.
 
-**Approved but not yet implemented:**
+**Implemented in Phase 3:**
 
-- Curated RBI, NPCI, and SEBI document ingestion.
-- BGE-M3 embeddings and FAISS retrieval.
+- Controlled source manifest with explicit URL-approval states.
+- Official-domain acquisition guard with SHA-256 recording.
+- PDF and HTML extraction, Unicode normalization, section/page-aware chunks,
+  and duplicate-content removal.
+- Pinned FABRIC acquisition and schema validation with a separate unreviewed
+  human-review record.
+- Replaceable embedding interface, deterministic mock, pinned BGE-M3 adapter,
+  embedding cache, and local benchmark recorder.
+- Persistent FAISS `IndexFlatIP` indexes with checked chunk mappings and model
+  compatibility metadata.
+- Separate English and multilingual corpus views and exploratory multilingual
+  retrieval-pilot tooling.
+
+**Remaining or proposed:**
+
+- NPCI acquisition: the approved exact endpoint returned HTTP 403 and was not
+  replaced or bypassed. RBI and SEBI PDFs were acquired and verified.
+- A genuine Hindi/Tamil regulator corpus; the current multilingual view contains
+  only genuine English source material.
 - LLM-backed answer generation and citations.
 - FABRIC-derived, human-reviewed evaluation records.
-- Experiments A-D and evaluation metrics.
+- Full experiments A-C and formal evaluation metrics. Experiment D currently
+  has only an exploratory, ungraded direct-retrieval pilot.
 
 Nothing in the second list should be interpreted as completed or experimentally
 validated.
@@ -69,6 +87,33 @@ The frontend reads `FINRAG_FRONTEND_API_URL`, which defaults to
 uv run pytest
 ```
 
+Run the optional real-model test only after downloading the pinned weights:
+
+```bash
+FINRAG_RUN_LIVE_BGE=1 uv run pytest -m live tests/live/test_bge_m3.py
+```
+
+## Phase 3 data workflow
+
+The three approved regulator URLs and their observed acquisition states are in
+`configs/sources.json`. Acquisition never crawls linked pages or substitutes
+failed sources:
+
+```bash
+uv run python scripts/acquire_sources.py
+uv run python scripts/build_indexes.py
+uv run python scripts/run_retrieval_pilot.py
+```
+
+FABRIC is independently pinned and can be prepared with:
+
+```bash
+uv run python scripts/prepare_fabric.py
+```
+
+This creates an unreviewed review template. It does not verify FABRIC answers,
+translations, regulations, or citations.
+
 Tests requiring live APIs must use the `live` marker and are never part of the
 default deterministic test suite unless explicitly selected.
 
@@ -84,4 +129,7 @@ FABRIC is a candidate source for evaluation questions, not independently
 verified ground truth. Future records will preserve upstream provenance,
 translation status, evidence mapping, and human-review status. No evaluation
 score will be reported without actual experiment output.
+
+See `docs/reproducibility.md` for pinned revisions, artifact locations, and
+integrity checks.
 
