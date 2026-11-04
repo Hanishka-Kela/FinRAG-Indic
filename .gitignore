@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Environments and local configuration
+.venv/
+.env
+.env.*
+!.env.example
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/
+
+# Local research artifacts (manifests and keep files remain versioned)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/indexes/*
+!data/indexes/.gitkeep
+results/raw/*
+!results/raw/.gitkeep
+results/aggregate/*
+!results/aggregate/.gitkeep
+results/figures/*
+!results/figures/.gitkeep
+
+# Model and index artifacts
+*.faiss
+*.index
+*.safetensors
+
