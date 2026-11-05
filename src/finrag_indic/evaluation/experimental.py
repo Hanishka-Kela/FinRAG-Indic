@@ -84,11 +84,17 @@ def citation_reference_validity(
 
 
 def _language_signal(answer: str, language: str) -> bool:
+    letters = [char for char in answer if char.isalpha()]
+    if len(letters) < 5:
+        return False
     if language == "hi":
-        return any("\u0900" <= char <= "\u097f" for char in answer)
-    if language == "ta":
-        return any("\u0b80" <= char <= "\u0bff" for char in answer)
-    return any(char.isascii() and char.isalpha() for char in answer)
+        target = sum("\u0900" <= char <= "\u097f" for char in letters)
+    elif language == "ta":
+        target = sum("\u0b80" <= char <= "\u0bff" for char in letters)
+    else:
+        target = sum(char.isascii() for char in letters)
+    threshold = 0.9 if language == "en" else 0.7
+    return target / len(letters) >= threshold
 
 
 def _evidence_from_hits(hits) -> list[EvidenceReference]:  # type: ignore[no-untyped-def]
@@ -280,7 +286,20 @@ def summarize_results(records: list[dict[str, object]]) -> list[dict[str, object
     output = []
     for condition in ("llm_only", "rag_english", "rag_multilingual"):
         selected = [r for r in records if r["condition"] == condition]
-        latencies = [float(r["total_ms"]) for r in selected if r["http_success"]]
+        successful = [r for r in selected if r["http_success"]]
+        failed = [r for r in selected if not r["http_success"]]
+        generated = [r for r in successful if r["answer_generated"]]
+        latencies = [float(r["total_ms"]) for r in successful]
+        language_consistent = [
+            _language_signal(str(r["answer"]), str(r["language"])) for r in successful
+        ]
+        citation_applicable = [
+            r
+            for r in successful
+            if condition != "llm_only"
+            and r["answer_generated"]
+            and not r["abstained"]
+        ]
         source_languages = Counter(
             chunk["document_language"]
             for record in selected
@@ -290,41 +309,50 @@ def summarize_results(records: list[dict[str, object]]) -> list[dict[str, object
             {
                 "condition": condition,
                 "records": len(selected),
+                "successful_requests": len(successful),
+                "failed_requests": len(failed),
+                "generated_answers": len(generated),
                 "success_rate": (
                     sum(bool(r["http_success"]) for r in selected) / len(selected)
                     if selected
                     else None
                 ),
-                "mean_latency_ms": statistics.mean(latencies) if latencies else None,
-                "median_latency_ms": statistics.median(latencies) if latencies else None,
+                "mean_latency_successful_ms": (
+                    statistics.mean(latencies) if latencies else None
+                ),
+                "median_latency_successful_ms": (
+                    statistics.median(latencies) if latencies else None
+                ),
                 "abstention_rate": (
                     sum(bool(r["abstained"]) for r in selected) / len(selected)
                     if selected
                     else None
                 ),
                 "language_signal_rate": (
-                    sum(bool(r["answer_language_signal"]) for r in selected) / len(selected)
-                    if selected
+                    sum(language_consistent) / len(language_consistent)
+                    if language_consistent
                     else None
                 ),
+                "language_signal_denominator": len(language_consistent),
                 "citation_valid_rate": (
                     None
-                    if condition == "llm_only"
+                    if not citation_applicable
                     else (
                     sum(
-                        bool(r["citation_reference_valid"])
-                        for r in selected
-                        if r["citation_reference_valid"] is not None
+                        bool(r["citation_reference_valid"]) for r in citation_applicable
                     )
-                    / sum(
-                        r["citation_reference_valid"] is not None for r in selected
-                    )
-                    if any(
-                        r["citation_reference_valid"] is not None for r in selected
-                    )
-                    else None
+                    / len(citation_applicable)
                     )
                 ),
+                "citation_valid_count": (
+                    sum(bool(r["citation_reference_valid"]) for r in citation_applicable)
+                    if citation_applicable
+                    else None
+                ),
+                "citation_valid_denominator": (
+                    len(citation_applicable) if citation_applicable else None
+                ),
+                "abstained_successfully": sum(bool(r["abstained"]) for r in successful),
                 "retrieved_source_language_counts": dict(source_languages),
             }
         )

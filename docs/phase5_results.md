@@ -42,3 +42,24 @@ The runner appends each completed case immediately and resumes by the
 1–5 fields for factual correctness, relevance, grounding, language consistency,
 clarity, and appropriate abstention. No human scores are generated
 automatically.
+
+## Final pilot quality check
+
+The 27 recorded pilot records were re-evaluated without changing the historical
+JSONL. The earlier English-RAG citation rate of 44.4% divided all nine records,
+including six successful abstentions whose answers intentionally contained no
+citation marker. The corrected metric applies citation validity only to
+successful, non-abstained RAG answers and reports failed requests separately.
+
+| Condition | Successful / failed | Generated answers | Mean successful latency | Citation-valid / applicable |
+|---|---:|---:|---:|---:|
+| LLM-only | 9 / 0 | 9 | 6609 ms | not applicable |
+| English RAG | 9 / 0 | 9 | 3312 ms | 3 / 3 (100%) |
+| Multilingual RAG | 8 / 1 | 8 | 1564 ms | 8 / 8 (100%) |
+
+English RAG had six successful abstentions; multilingual RAG had one transient
+provider failure. Citation-reference validity checks marker resolution to
+retrieved metadata only; it does not establish claim-level factual support.
+Language consistency is a conservative script-dominance signal, not a semantic
+translation assessment. No additional paid API calls were made for this quality
+check.

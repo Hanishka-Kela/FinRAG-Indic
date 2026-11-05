@@ -68,4 +68,13 @@ def test_summary_does_not_invent_missing_measurements() -> None:
     summary = summarize_results(
         [{"condition": "llm_only", "http_success": False, "total_ms": 3, "abstained": True, "answer_language_signal": False, "citation_reference_valid": False}]
     )
-    assert summary[0]["mean_latency_ms"] is None
+    assert summary[0]["mean_latency_successful_ms"] is None
+    assert summary[0]["citation_valid_rate"] is None
+
+
+def test_language_signal_requires_dominant_script_and_minimum_text() -> None:
+    from finrag_indic.evaluation.experimental import _language_signal
+
+    assert not _language_signal("OK", "en")
+    assert not _language_signal("This is ठीक", "en")
+    assert _language_signal("यह एक स्पष्ट उत्तर है", "hi")

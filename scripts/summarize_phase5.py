@@ -15,14 +15,18 @@ def _bar_chart(rows: list[dict[str, object]], path: Path) -> None:
     title = "Phase 5 response success and latency"
     draw.text((40, 30), title, fill="black")
     max_latency = max(
-        [float(row["mean_latency_ms"]) for row in rows if row["mean_latency_ms"] is not None]
+        [
+            float(row["mean_latency_successful_ms"])
+            for row in rows
+            if row["mean_latency_successful_ms"] is not None
+        ]
         or [1]
     )
     bar_width = 220
     for index, row in enumerate(rows):
         x = 70 + index * 300
         success = float(row["success_rate"] or 0)
-        latency = float(row["mean_latency_ms"] or 0)
+        latency = float(row["mean_latency_successful_ms"] or 0)
         draw.rectangle((x, 500 - int(success * 300), x + bar_width, 500), fill="#4472C4")
         draw.text((x, 515), str(row["condition"]), fill="black")
         draw.text((x, 475 - int(success * 300)), f"success {success:.0%}", fill="black")
