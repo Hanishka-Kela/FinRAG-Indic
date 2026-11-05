@@ -41,7 +41,12 @@ The runner appends each completed case immediately and resumes by the
 `canonical_id`, language, and condition key. The reviewer CSV contains blank
 1–5 fields for factual correctness, relevance, grounding, language consistency,
 clarity, and appropriate abstention. No human scores are generated
-automatically.
+automatically. The historical pilot and generated review artifacts preserved in
+this repository are the [raw pilot JSONL](../results/raw/phase5_pilot.jsonl),
+[aggregate summary JSON](../results/aggregate/phase5_summary.json),
+[aggregate summary CSV](../results/aggregate/phase5_summary.csv),
+[reviewer template](../results/aggregate/phase5_reviewer_scores.csv), and
+[performance figure](../results/figures/phase5_response_performance.png).
 
 ## Final pilot quality check
 

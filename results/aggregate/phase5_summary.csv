@@ -1,0 +1,4 @@
+condition,records,successful_requests,failed_requests,generated_answers,success_rate,mean_latency_successful_ms,median_latency_successful_ms,abstention_rate,language_signal_rate,language_signal_denominator,citation_valid_rate,citation_valid_count,citation_valid_denominator,abstained_successfully,retrieved_source_language_counts
+llm_only,9,9,0,9,1.0,6608.572666666667,2645.983,0.0,0.8888888888888888,9,,,,0,{}
+rag_english,9,9,0,9,1.0,3312.168111111111,2282.201,0.6666666666666666,1.0,9,1.0,3,3,6,{'en': 45}
+rag_multilingual,9,8,1,8,0.8888888888888888,1564.118375,1517.2635,0.0,1.0,8,1.0,8,8,0,"{'en': 39, 'hi': 6}"

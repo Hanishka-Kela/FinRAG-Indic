@@ -1,0 +1,129 @@
+canonical_id,topic,language,condition,question,answer,factual_correctness_1_5,relevance_1_5,grounding_1_5,language_consistency_1_5,clarity_1_5,appropriate_abstention_1_5,reviewer_notes
+fin-001,UPI PIN safety,en,llm_only,Should a UPI PIN ever be shared with another person?,"**No, a UPI (Unified Payments Interface) PIN should never be shared with another person.**
+
+From a general financial-literacy and cybersecurity perspective, a UPI PIN functions just like a debit card PIN or a banking password. It is the final authorization required to transfer money out of your bank account. 
+
+Sharing your UPI PIN with anyone—including family members, friends, merchants, or individuals claiming to be bank or customer support representatives—presents significant financial risks:
+* **Loss of Funds:** Anyone with your UPI PIN and access to your linked mobile number or device can authorize unauthorized transactions and drain your account.
+* **Lack of Recourse:** Financial institutions and payment service providers typically consider transactions authorized by your secure PIN to be your responsibility, which can make recovering lost funds difficult.
+* **Scam Prevention:** Legitimate customer support agents, bank officials, or payment platform representatives will never ask for your UPI PIN. 
+
+To maintain financial security, your UPI PIN should be memorized, kept strictly confidential, and entered only by you on your trusted device when initiating a payment.",,,,,,,
+fin-001,UPI PIN safety,en,rag_english,Should a UPI PIN ever be shared with another person?,"No, a UPI PIN should never be shared with anyone [S1]. Under the ""Don'ts"" for UPI, the rule is to never share your PIN with anyone [S1].",,,,,,,
+fin-001,UPI PIN safety,en,rag_multilingual,Should a UPI PIN ever be shared with another person?,"No, a UPI PIN should never be shared with anyone [S1].",,,,,,,
+fin-001,UPI PIN safety,hi,llm_only,क्या UPI पिन कभी किसी दूसरे व्यक्ति के साथ साझा करना चाहिए?,"नहीं, UPI पिन (Unified Payments Interface Personal Identification Number) कभी भी किसी दूसरे व्यक्ति के साथ साझा नहीं करना चाहिए। 
+
+UPI पिन एक गुप्त पासवर्ड की तरह होता है जो आपके बैंक खाते से सीधे जुड़ा होता है। इसे किसी के भी साथ साझा करने से आपके साथ वित्तीय धोखाधड़ी (financial fraud) हो सकती है और आपका बैंक खाता खाली हो सकता है। 
+
+याद रखें:
+* बैंक, यूपीआई ऐप (जैसे Google Pay, PhonePe, Paytm) या कोई भी अन्य वित्तीय संस्थान कभी भी फोन, ईमेल या मैसेज पर आपका UPI पिन नहीं मांगता है।
+* किसी को भी अपना UPI पिन बताने या किसी अनजान लिंक में इसे दर्ज करने से बचें।",,,,,,,
+fin-001,UPI PIN safety,hi,rag_english,क्या UPI पिन कभी किसी दूसरे व्यक्ति के साथ साझा करना चाहिए?,"नहीं, अपना UPI पिन कभी भी किसी के साथ साझा नहीं करना चाहिए [S1]।",,,,,,,
+fin-001,UPI PIN safety,hi,rag_multilingual,क्या UPI पिन कभी किसी दूसरे व्यक्ति के साथ साझा करना चाहिए?,"नहीं, अपना यूपीआई पिन कभी भी किसी दूसरे व्यक्ति के साथ साझा नहीं करना चाहिए [S1]।",,,,,,,
+fin-001,UPI PIN safety,ta,llm_only,UPI PIN-ஐ வேறொருவருடன் பகிர வேண்டுமா?,"இல்லை, UPI PIN-ஐ எவരുடனும் (நண்பர்கள், குடும்பத்தினர், வங்கி அதிகாரிகள், அல்லது வாடிக்கையாளர் சேவை மையத்தினர் உட்பட) எக்காரணம் கொண்டும் பகிரக் கூடாது. 
+
+UPI PIN என்பது உங்கள் வங்கி கணக்கிலிருந்து பணத்தை அனுப்ப உங்களை மட்டுமே அங்கீகரிக்கும் ஒரு இரகசிய கடவுச்சொல் (Password) ஆகும். இதனைப் பகிர்ந்தால், உங்கள் அனுமதியின்றி உங்கள் கணக்கிலிருந்து பணம் திருடப்பட வாய்ப்புள்ளது. 
+
+வங்கி அதிகாரிகளோ அல்லது டிஜிட்டல் பணப்பரிமாற்ற செயலிகளோ (Google Pay, PhonePe, Paytm போன்றவை) எப்போதுமே உங்கள் UPI PIN-ஐ கேட்பதில்லை. எனவே, உங்கள் பாதுகாப்பிற்காக அதனை எப்போதும் இரகசியமாகப் வைத்திருப்பது அவசியமாகும்.",,,,,,,
+fin-001,UPI PIN safety,ta,rag_english,UPI PIN-ஐ வேறொருவருடன் பகிர வேண்டுமா?,"இல்லை, UPI PIN-ஐ யாருடனும் பகிரக்கூடாது [S2]. உங்கள் PIN-ஐ எவ這ரிடமும் பகிரக் கூடாது என்பது UPI-க்கான முக்கிய செய்முறைகளில் ஒன்றாகும் [S2].",,,,,,,
+fin-001,UPI PIN safety,ta,rag_multilingual,UPI PIN-ஐ வேறொருவருடன் பகிர வேண்டுமா?,"இல்லை, உங்கள் UPI PIN-ஐ யாருடனும் ஒருபோதும் பகிரக்கூடாது [S2].",,,,,,,
+fin-002,failed UPI transfer,en,llm_only,What happens when a UPI transfer debits the sender but does not credit the beneficiary?,"When a UPI (Unified Payments Interface) transfer debits the sender's account but the money is not credited to the beneficiary's account, it is considered a failed or stuck transaction. This typically happens due to technical glitches, timeout issues between banking servers, or temporary network failures. 
+
+Here is what generally happens and how the situation is resolved based on standard financial-literacy and banking guidelines:
+
+1. **Automatic Reversal (Auto-Reversal):**
+   * According to regulatory guidelines governing UPI in many jurisdictions (such as NPCI rules in India), if a transaction is debited from the sender but fails to reach the beneficiary, the system is designed to automatically reverse the funds.
+   * Banks and payment apps usually process this auto-reversal within a specific timeframe (often within T+1 to T+4 working days, though many are resolved instantly or within a few hours). The money is credited back to the sender’s originating bank account.
+
+2. **Checking Transaction Status:**
+   * The sender should check the status of the transaction within their UPI-enabled application (e.g., Google Pay, PhonePe, Paytm, or a banking app). 
+   * The status will usually show as ""Failed,"" ""Pending,"" or ""Declined,"" which confirms that the transfer was not successfully completed on the recipient's end.
+
+3. **Raising a Dispute or Complaint:**
+   * If the amount is not automatically reversed within the stipulated timeframe, the sender can raise a dispute directly through their UPI app by clicking on the specific transaction and selecting options like ""Raise a complaint,"" ""Help,"" or ""Report an issue.""
+   * Alternatively, the sender can contact their bank's customer support with the UPI Transaction Reference ID (UPI Ref ID) or Transaction ID.
+
+4. **Beneficiary End:**
+   * The beneficiary does not need to take action unless the money was actually debited from the sender and they have a confirmed reference, in which case they can ask the sender to check with their bank. However, if the transaction failed, the beneficiary's account will simply not reflect any incoming funds. 
+
+*Disclaimer: Specific resolution timelines and procedures can vary depending on the country's payment regulations and the policies of the specific banks involved.*",,,,,,,
+fin-002,failed UPI transfer,en,rag_english,What happens when a UPI transfer debits the sender but does not credit the beneficiary?,"The provided evidence explains what UPI is, how it works, and its benefits [S1], along with dos and don'ts [S2], but it does not contain information about what happens when a UPI transfer debits the sender but fails to credit the beneficiary.",,,,,,,
+fin-002,failed UPI transfer,en,rag_multilingual,What happens when a UPI transfer debits the sender but does not credit the beneficiary?,"When a UPI transfer debits the sender's account but the beneficiary account is not credited, the beneficiary bank is required to automatically reverse the funds latest by T + 1 day [S1]. If there is any delay in processing the auto-reversal beyond T + 1 day, a compensation of ₹100 per day is payable [S1].",,,,,,,
+fin-002,failed UPI transfer,hi,llm_only,UPI ट्रांसफर में भेजने वाले का खाता डेबिट हो जाए लेकिन लाभार्थी को पैसा न मिले तो क्या होता है?,"UPI (Unified Payments Interface) ट्रांसफर के दौरान यदि आपके (भेजने वाले के) खाते से पैसे कट जाएं लेकिन लाभार्थी (पाने वाले) को वह राशि प्राप्त न हो, तो आम तौर पर निम्नलिखित प्रक्रिया होती है:
+
+1. **ऑटोमैटिक रिफंड (स्वचालित वापसी):** 
+   भारतीय राष्ट्रीय भुगतान निगम (NPCI) और बैंकों के नियमों के अनुसार, यदि ट्रांजैक्शन तकनीकी खराबी के कारण अधूरा रह जाता है या विफल हो जाता है, तो कटी हुई राशि आमतौर पर अपने आप आपके बैंक खाते में वापस आ जाती है। 
+
+2. **समय सीमा (Timeframe):**
+   * **टी+1 या टी+3 दिन:** ज़्यादातर मामलों में यह रिफंड 1 कामकाजी दिन (Working Day) के भीतर हो जाता है, लेकिन कुछ मामलों में इसमें 3 से 5 कार्य दिवस लग सकते हैं।
+   * **तत्काल रिफंड:** कई बार तकनीकी सुधार के तुरंत बाद पैसा कुछ ही घंटों में वापस आ जाता है।
+
+3. **आपको क्या करना चाहिए?**
+   * **UPI ऐप की मदद लें:** आप अपने इस्तेमाल किए जा रहे UPI ऐप (जैसे Google Pay, PhonePe, Paytm, BHIM आदि) के ट्रांजैक्शन हिस्ट्री में जाएं, उस भुगतान पर क्लिक करें और 'Raise Dispute', 'Get Help', या 'Report Issue' का विकल्प चुनें।
+   * **अपने बैंक से संपर्क करें:** यदि तय समय सीमा (जैसे 3-5 दिन) के बाद भी पैसा वापस न आए, तो अपने बैंक की ग्राहक सेवा (Customer Care) से संपर्क करें या बैंक शाखा में जाकर ट्रांजैक्शन की UTR (Unique Transaction Reference) आईडी या UPI ट्रांजैक्शन आईडी के साथ शिकायत दर्ज कराएं।
+   * **लाभार्थी का बैंक:** आप लाभार्थी से भी कह सकते हैं कि वे अपने बैंक में चेक करें कि क्या कोई पेंडिंग या होल्ड ट्रांजैक्शन आया है।
+
+**सावधानी:** हमेशा आधिकारिक UPI ऐप और बैंक के कस्टमर केयर नंबर का ही उपयोग करें। किसी भी अनजान व्यक्ति के साथ अपनी UPI पिन (PIN) या बैंक विवरण साझा न करें।",,,,,,,
+fin-002,failed UPI transfer,hi,rag_english,UPI ट्रांसफर में भेजने वाले का खाता डेबिट हो जाए लेकिन लाभार्थी को पैसा न मिले तो क्या होता है?,"दी गई जानकारी में यह उल्लेख नहीं है कि यूपीआई (UPI) ट्रांसफर के दौरान यदि भेजने वाले का खाता डेबिट हो जाए लेकिन लाभार्थी को पैसा न मिले, तो ऐसी स्थिति में क्या होता है।",,,,,,,
+fin-002,failed UPI transfer,hi,rag_multilingual,UPI ट्रांसफर में भेजने वाले का खाता डेबिट हो जाए लेकिन लाभार्थी को पैसा न मिले तो क्या होता है?,"यदि UPI ट्रांसफर में भेजने वाले का खाता डेबिट हो जाता है लेकिन लाभार्थी के खाते में पैसे जमा नहीं होते हैं, तो लाभार्थी बैंक द्वारा T + 1 दिन के भीतर (latest on T + 1 day) पैसे स्वतः वापस (auto-reversal) कर दिए जाते हैं [S1]। 
+
+यदि यह देरी T + 1 दिन के बाद भी होती है, तो विलंब के लिए प्रति दिन ₹100/- का मुआवजा दिया जाता है [S1]।",,,,,,,
+fin-002,failed UPI transfer,ta,llm_only,UPI பரிமாற்றத்தில் அனுப்புநரின் கணக்கில் பணம் கழிக்கப்பட்டும் பயனாளிக்கு வரவு ஆகாவிட்டால் என்ன நடக்கும்?,"UPI (Unified Payments Interface) பரிமாற்றத்தின் போது அனுப்புநரின் (Sender) கணக்கில் பணம் கழிக்கப்பட்டு, ஆனால் பயனாளிக்கு (Beneficiary) வரவு வைக்கப்படாவிட்டால், பொதுவாகப் பின்வரும் நடைமுறைகள் மூலம் சிக்கல் தீர்க்கப்படும்:
+
+1. **தானியங்குத் திருப்பம் (Auto-Reversal):**
+   இது ஒரு பொதுவான தொழில்நுட்பக் கோளாறு (Technical Glitch) அல்லது வங்கிச் சேவையகத் தாமதம் காரணமாக நடக்கலாம். பெரும்பாலான சந்தர்ப்பங்களில், ரிசர்வ் வங்கி (RBI) மற்றும் என்பிசிஐ (NPCI) விதிமுறைகளின்படி, பணம் தானாகவே அனுப்புநரின் கணக்கிற்கே திருப்பி அனுப்பப்படும் (Auto-reversal).
+
+2. **கால அவகாசம் (Timeframe):**
+   * **T+0 அல்லது T+1 நாட்கள்:** பல பரிமாற்றங்கள் உடனடியாகவோ அல்லது அதே நாளுக்குள்ளோ சரி செய்யப்படுகின்றன. 
+   * NPCI வழிகாட்டுதல்களின்படி, தோல்வியடைந்த பரிமாற்றங்களுக்கான பணம் பொதுவாக **3 முதல் 5 வேலை நாட்களுக்குள்** (Working Days) அனுப்புநரின் கணக்கில் வரவு வைக்கப்பட வேண்டும்.
+
+3. **நீங்கள் என்ன செய்ய வேண்டும்?**
+   * **பரிமாற்ற ஐடி (UPI Transaction ID / UTR Number):** உங்கள் UPI செயலியில் உள்ள பரிமாற்ற வரலாற்றுப் பகுதியிலிருந்து (Transaction History) UTR எண் அல்லது பரிமாற்ற குறிப்பு எண்களைச் சரிபார்க்கவும்.
+   * **வங்கியத் தொடர்பு:** குறிப்பிட்ட காலக்கெடுவிற்குள் பணம் உங்கள் கணக்கிற்குத் திரும்ப வரவில்லை என்றால், உங்கள் வங்கியின் வாடிக்கையாளர் சேவை மையத்தைத் (Customer Support) தொடர்பு கொண்டு, பரிமாற்ற எண்ணைக் குறிப்பிட்டுப் புகார் அளிக்கலாம்.
+   * **செயலி ஆதரவு (App Support):** நீங்கள் பயன்படுத்திய UPI செயலி (Google Pay, PhonePe, Paytm போன்றவை) மூலமாகவும் புகார் பதிவு செய்ய விருப்பம் இருக்கும்.
+
+பணம் எங்கும் இழக்கப்படாது; தொழில்நுட்பத் தவறு சரிசெய்யப்பட்டவுடன் அது உரிய கணக்கிற்குச் சென்று சேரும் அல்லது உங்கள் கணக்கிற்கே திரும்பி வந்துவிடும்.",,,,,,,
+fin-002,failed UPI transfer,ta,rag_english,UPI பரிமாற்றத்தில் அனுப்புநரின் கணக்கில் பணம் கழிக்கப்பட்டும் பயனாளிக்கு வரவு ஆகாவிட்டால் என்ன நடக்கும்?,வழங்கப்பட்ட தரவுகளில் UPI பரிமாற்றத்தின் போது அனுப்புநரின் கணக்கில் பணம் கழிக்கப்பட்டு பயனாளிக்கு வரவு ஆகாவிட்டால் என்ன நடக்கும் என்பது பற்றிய தகவல்கள் இல்லை.,,,,,,,
+fin-002,failed UPI transfer,ta,rag_multilingual,UPI பரிமாற்றத்தில் அனுப்புநரின் கணக்கில் பணம் கழிக்கப்பட்டும் பயனாளிக்கு வரவு ஆகாவிட்டால் என்ன நடக்கும்?,"UPI பரிமாற்றத்தில் அனுப்புநரின் கணக்கில் பணம் கழிக்கப்பட்டும் பயனாளிக்கு வரவு ஆகாவிட்டால், பயனாளி வங்கியானது T + 1 நாளுக்குள் பணத்தை தானாகவே திருப்பிச் செலுத்தும் (Auto-reversal) [S1]. 
+
+T + 1 நாளுக்குப் பிறகும் தாமதம் ஏற்பட்டால், தாமதமாகும் ஒவ்வொரு நாளுக்கும் ₹100/- இழப்பீடு வழங்கப்படுகிறது [S1].",,,,,,,
+fin-003,UPI merchant payment failure,en,llm_only,What is the reversal timeline when a UPI merchant payment is debited but not confirmed?,"In the context of the Unified Payments Interface (UPI) ecosystem (primarily managed by the National Payments Corporation of India, or NPCI), when a merchant payment is debited from the customer's account but not confirmed (meaning the transaction fails or times out before a success confirmation is generated), the reversal timeline typically depends on whether it is an ""auto-reversal"" or requires raising a dispute.
+
+Here is the general timeline based on standard financial and regulatory guidelines for UPI transactions:
+
+1. **T+0 to T+1 (Real-Time to Same Day):** 
+   Many UPI transactions that fail due to technical glitches or timeout issues are automatically reversed by the banking system (often referred to as an ""auto-reversal"") within a few minutes to a few hours. 
+
+2. **T+5 Days (Regulatory Standard):**
+   According to standard turnaround times (TAT) and regulatory frameworks governing payment systems, if an auto-reversal does not happen immediately, the beneficiary bank or the remitter bank is generally required to credit the funds back to the customer's account within **up to 5 working days** (often written as T+5, where T is the transaction date) from the date of the complaint or transaction failure.
+
+3. **Grievance Redressal (Ombudsman/Escalation):**
+   If the funds are not credited within the specified 5-day window, customers are typically advised to raise a dispute through their UPI app (PSP app) or directly with their bank. If unresolved, further escalation channels (such as the Banking Ombudsman) become available.
+
+*Disclaimer: Exact timelines can occasionally vary depending on specific bank processing times, network congestion, or specific merchant-acquiring bank responses, but T+5 working days is the standard maximum window for resolution of failed UPI transactions.*",,,,,,,
+fin-003,UPI merchant payment failure,en,rag_english,What is the reversal timeline when a UPI merchant payment is debited but not confirmed?,"The provided evidence explains what UPI is, its benefits, safety tips (dos and don'ts), rules on unauthorized electronic banking transactions, and how to file a complaint, but it does not contain information about the reversal timeline when a UPI merchant payment is debited but not confirmed.",,,,,,,
+fin-003,UPI merchant payment failure,en,rag_multilingual,What is the reversal timeline when a UPI merchant payment is debited but not confirmed?,"For a UPI merchant payment where your account is debited but the transaction confirmation is not received at the merchant location, the auto-reversal timeline is within T + 5 days [S1]. If the delay extends beyond T + 5 days, compensation of ₹100 per day is applicable [S1].",,,,,,,
+fin-003,UPI merchant payment failure,hi,llm_only,UPI व्यापारी भुगतान डेबिट हो जाए लेकिन पुष्टि न मिले तो राशि वापसी की समय-सीमा क्या है?,"UPI (Unified Payments Interface) व्यापारी लेनदेन (merchant transaction) के मामले में, यदि आपके खाते से पैसे कट जाएं (डेबिट हो जाएं) लेकिन व्यापारी (merchant) या ऐप को भुगतान की पुष्टि (confirmation) न मिले, तो सामान्य वित्तीय और NPCI (नेशनल पेमेंट्स कॉरपोरेशन ऑफ इंडिया) के नियमों के अनुसार राशि वापसी की प्रक्रिया इस प्रकार है:
+
+1. **स्वचालित वापसी (Auto-Reversal):** 
+   यदि तकनीकी त्रुटि के कारण लेन-देन विफल हो जाता है और पुष्टि नहीं मिलती है, तो नियमों के अनुसार बैंक द्वारा राशि आमतौर पर **T+1 से T+4 कार्य दिवसों** (Working Days) के भीतर आपके खाते में स्वतः वापस (refund) आ जानी चाहिए (यहाँ T लेनदेन का दिन है)।
+
+2. **शिकायत दर्ज करने की समय-सीमा:**
+   यदि निर्धारित दिनों के भीतर पैसा वापस नहीं आता है, तो आप अपने भुगतान ऐप (जैसे Google Pay, PhonePe, Paytm, BHIM आदि) या अपने बैंक के माध्यम से शिकायत दर्ज कर सकते हैं। एनपीसीआई के दिशानिर्देशों के अनुसार, आप लेनदेन की तारीख से **30 दिनों** के भीतर विवाद (dispute) दर्ज कर सकते हैं।
+
+3. **व्यापारी स्तर पर समाधान:**
+   कई बार भुगतान बैंक के स्तर पर अटक जाता है लेकिन व्यापारी के पास पहुंच जाता है। ऐसे मामलों में, यदि व्यापारी को決済 (settlement) नहीं मिलता है, तो वे आमतौर पर 24 से 48 घंटों के भीतर राशि स्वतः आपके खाते में वापस भेज देते हैं।
+
+**सुझाव:** 
+यदि आपको समय पर रिफंड न मिले, तो अपने संबंधित बैंक के ग्राहक सहायता केंद्र (Customer Support) से संपर्क करें और अपनी शिकायत के लिए 'UPI Transaction ID' या 'UTR नंबर' साथ रखें।",,,,,,,
+fin-003,UPI merchant payment failure,hi,rag_english,UPI व्यापारी भुगतान डेबिट हो जाए लेकिन पुष्टि न मिले तो राशि वापसी की समय-सीमा क्या है?,दी गई सामग्री में यूपीआई (UPI) व्यापारी भुगतान डेबिट होने और पुष्टि न मिलने पर राशि वापसी की समय-सीमा के बारे में कोई जानकारी उपलब्ध नहीं है।,,,,,,,
+fin-003,UPI merchant payment failure,hi,rag_multilingual,UPI व्यापारी भुगतान डेबिट हो जाए लेकिन पुष्टि न मिले तो राशि वापसी की समय-सीमा क्या है?,"यूपी व्यापारी भुगतान में यदि खाता डेबिट हो जाए लेकिन व्यापारी के स्थान पर लेनदेन की पुष्टि (कन्फर्मेशन) प्राप्त न हो, तो ऑटो-रिवर्सल (राशि वापसी) की समय-सीमा T + 5 दिन है [S1]। यदि T + 5 दिनों के बाद भी देरी होती है, तो ₹100 प्रति दिन का मुआवजा दिया जाता है [S1]।",,,,,,,
+fin-003,UPI merchant payment failure,ta,llm_only,UPI வணிகர் கட்டணம் கழிக்கப்பட்டும் உறுதி கிடைக்காவிட்டால் பணம் திரும்பும் காலவரம்பு என்ன?,"UPI (Unified Payments Interface) பண பரிவர்த்தனையின் போது, வணிகரின் கணக்கிற்குப் பணம் கழிக்கப்பட்டு ஆனால் பரிவர்த்தனைக்கான உறுதிப்படுத்தல் (Confirmation) கிடைக்கவில்லை என்றால், பணம் திரும்பக் கிடைக்கும் காலவரம்பு பொதுவாக பின்வருமாறு இருக்கும்:
+
+* **தானியங்கித் திருப்பம் (Auto-reversal):** தேசிய கொடுப்பனவுக் கழகத்தின் (NPCI) விதிமுறைகளின்படி, இதுபோன்ற தோல்வியடைந்த பரிவர்த்தனைகளுக்குரிய பணம் வாடிக்கையாளரின் வங்கிக் கணக்கிற்குத் தானாகவே திரும்ப வர வேண்டும். இது பொதுவாக **T+1 முதல் T+5 நாட்களுக்குள்** (பரிவர்த்தனை செய்த நாளிலிருந்து 1 முதல் 5 வேலை நாட்கள்) நடக்கும். பல நேரங்களில் இது உடனடித்தோ அல்லது 24 மணி நேரத்திற்குள்ளோ தீர்க்கப்படுகிறது.
+
+* **வங்கிகளைத் தொடர்பொள்ளுதல்:** குறிப்பிட்ட காலக்கெடுவிற்குள் பணம் வரவில்லை என்றால், வாடிக்கையாளர் தனது வங்கியைத் (Remitter Bank) தொடர்புகொண்டு புகார் அளிக்கலாம். 
+
+* **மனு அளித்தல்:** சம்பந்தப்பட்ட UPI செயலி (Google Pay, PhonePe, Paytm போன்றவை) அல்லது வங்கிகளின் உதவிப் பகுதி மூலமாகவும் பரிவர்த்தனை எண் (UPI Transaction ID) மற்றும் புகாரைப் பதிவு செய்ய முடியும்.",,,,,,,
+fin-003,UPI merchant payment failure,ta,rag_english,UPI வணிகர் கட்டணம் கழிக்கப்பட்டும் உறுதி கிடைக்காவிட்டால் பணம் திரும்பும் காலவரம்பு என்ன?,வழங்கப்பட்டுள்ள ஆவணங்களில் UPI வணிகர் கட்டணம் கழிக்கப்பட்டு உறுதி கிடைக்காவிட்டால் பணம் திரும்பும் காலவரம்பு பற்றிய தகவலեր இல்லை.,,,,,,,
+fin-003,UPI merchant payment failure,ta,rag_multilingual,UPI வணிகர் கட்டணம் கழிக்கப்பட்டும் உறுதி கிடைக்காவிட்டால் பணம் திரும்பும் காலவரம்பு என்ன?,,,,,,,,

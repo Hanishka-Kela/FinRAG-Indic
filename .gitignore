@@ -47,10 +47,15 @@ data/models/*
 !data/models/.gitkeep
 results/raw/*
 !results/raw/.gitkeep
+!results/raw/phase5_pilot.jsonl
 results/aggregate/*
 !results/aggregate/.gitkeep
+!results/aggregate/phase5_summary.json
+!results/aggregate/phase5_summary.csv
+!results/aggregate/phase5_reviewer_scores.csv
 results/figures/*
 !results/figures/.gitkeep
+!results/figures/phase5_response_performance.png
 
 # Model and index artifacts
 *.faiss

@@ -1,0 +1,61 @@
+[
+  {
+    "condition": "llm_only",
+    "records": 9,
+    "successful_requests": 9,
+    "failed_requests": 0,
+    "generated_answers": 9,
+    "success_rate": 1.0,
+    "mean_latency_successful_ms": 6608.572666666667,
+    "median_latency_successful_ms": 2645.983,
+    "abstention_rate": 0.0,
+    "language_signal_rate": 0.8888888888888888,
+    "language_signal_denominator": 9,
+    "citation_valid_rate": null,
+    "citation_valid_count": null,
+    "citation_valid_denominator": null,
+    "abstained_successfully": 0,
+    "retrieved_source_language_counts": {}
+  },
+  {
+    "condition": "rag_english",
+    "records": 9,
+    "successful_requests": 9,
+    "failed_requests": 0,
+    "generated_answers": 9,
+    "success_rate": 1.0,
+    "mean_latency_successful_ms": 3312.168111111111,
+    "median_latency_successful_ms": 2282.201,
+    "abstention_rate": 0.6666666666666666,
+    "language_signal_rate": 1.0,
+    "language_signal_denominator": 9,
+    "citation_valid_rate": 1.0,
+    "citation_valid_count": 3,
+    "citation_valid_denominator": 3,
+    "abstained_successfully": 6,
+    "retrieved_source_language_counts": {
+      "en": 45
+    }
+  },
+  {
+    "condition": "rag_multilingual",
+    "records": 9,
+    "successful_requests": 8,
+    "failed_requests": 1,
+    "generated_answers": 8,
+    "success_rate": 0.8888888888888888,
+    "mean_latency_successful_ms": 1564.118375,
+    "median_latency_successful_ms": 1517.2635,
+    "abstention_rate": 0.0,
+    "language_signal_rate": 1.0,
+    "language_signal_denominator": 8,
+    "citation_valid_rate": 1.0,
+    "citation_valid_count": 8,
+    "citation_valid_denominator": 8,
+    "abstained_successfully": 0,
+    "retrieved_source_language_counts": {
+      "en": 39,
+      "hi": 6
+    }
+  }
+]

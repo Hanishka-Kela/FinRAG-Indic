@@ -62,9 +62,13 @@ The pilot ran 27 actual Gemini requests: 3 canonical questions × 3 languages ×
 ## Pilot results
 
 The corrected table is recorded in [phase5_results.md](./phase5_results.md).
-Generated summaries and figures, when a local pilot output is preserved, are
-under `results/aggregate/` and `results/figures/`; those runtime outputs are
-ignored by Git and are not required to run the application.
+The preserved historical outputs are:
+
+- [Raw pilot JSONL](../results/raw/phase5_pilot.jsonl)
+- [Aggregate summary JSON](../results/aggregate/phase5_summary.json)
+- [Aggregate summary CSV](../results/aggregate/phase5_summary.csv)
+- [Reviewer template](../results/aggregate/phase5_reviewer_scores.csv)
+- [Performance figure](../results/figures/phase5_response_performance.png)
 
 | Condition | Successful / failed | Generated | Mean successful latency | Citation-valid / applicable |
 |---|---:|---:|---:|---:|
@@ -79,9 +83,8 @@ abstention. Citation validity checks marker-to-retrieved-passage resolution,
 not factual entailment. Language consistency is a script-dominance heuristic,
 not human translation assessment.
 
-No human reviewer scores have been entered. The runner can generate a reviewer
-template at `results/aggregate/phase5_reviewer_scores.csv`; that runtime output
-is ignored and may not be present in a fresh checkout.
+No human reviewer scores have been entered. The preserved reviewer template is
+blank by design.
 
 ## Reproducibility
 
