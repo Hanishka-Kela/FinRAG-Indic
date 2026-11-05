@@ -5,7 +5,7 @@
 From the repository root:
 
 ```bash
-uv sync --dev
+uv sync --dev --locked
 cp .env.example .env
 ```
 
@@ -26,6 +26,26 @@ uv run streamlit run frontend/streamlit_app.py
 
 Open the Streamlit URL shown in the terminal. The sidebar should report the
 backend and retrieval index as ready.
+
+## Temporary Cloudflare Quick Tunnel
+
+Install `cloudflared` once:
+
+```bash
+brew install cloudflare/cloudflare/cloudflared
+```
+
+From the repository root, launch the complete temporary demo:
+
+```bash
+./scripts/run_public_demo.sh
+```
+
+Share only the printed `https://*.trycloudflare.com` URL. The script exposes
+Streamlit publicly while FastAPI remains local, verifies both services, writes
+runtime logs to ignored `.demo-logs/`, and stops child services on `Ctrl-C`.
+The Quick Tunnel is temporary: its URL changes, it is not durable deployment,
+and the host Mac must remain powered on with the launcher running.
 
 ## Suggested walkthrough
 
@@ -58,3 +78,12 @@ means the first generated answer needed one bounded citation-repair request.
   model, embedding revision, and index availability without exposing secrets.
 - If the hosted provider is unavailable, the UI shows an error; do not present
   deterministic mock output as a live Gemini result.
+- If the index is missing, confirm `vectors.faiss`, `metadata.json`, and
+  `chunks.jsonl` exist under `data/indexes/multilingual-genuine-v2`.
+- If the tunnel has no URL, confirm `cloudflared` is installed and inspect
+  `.demo-logs/cloudflared.log`.
+- If the first response is slow, wait for lazy BGE-M3 loading to complete.
+
+Stop local services with `Ctrl-C` in their terminals. Stop the Quick Tunnel
+with `Ctrl-C` in the launcher terminal; it also cleans up services started by
+the script.

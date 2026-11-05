@@ -61,9 +61,10 @@ The pilot ran 27 actual Gemini requests: 3 canonical questions × 3 languages ×
 
 ## Pilot results
 
-The corrected summary is in
-[phase5_summary.json](../results/aggregate/phase5_summary.json), with the
-visual in [phase5_response_performance.png](../results/figures/phase5_response_performance.png).
+The corrected table is recorded in [phase5_results.md](./phase5_results.md).
+Generated summaries and figures, when a local pilot output is preserved, are
+under `results/aggregate/` and `results/figures/`; those runtime outputs are
+ignored by Git and are not required to run the application.
 
 | Condition | Successful / failed | Generated | Mean successful latency | Citation-valid / applicable |
 |---|---:|---:|---:|---:|
@@ -78,32 +79,44 @@ abstention. Citation validity checks marker-to-retrieved-passage resolution,
 not factual entailment. Language consistency is a script-dominance heuristic,
 not human translation assessment.
 
-No human reviewer scores have been entered. The reviewer template is
-[phase5_reviewer_scores.csv](../results/aggregate/phase5_reviewer_scores.csv).
+No human reviewer scores have been entered. The runner can generate a reviewer
+template at `results/aggregate/phase5_reviewer_scores.csv`; that runtime output
+is ignored and may not be present in a fresh checkout.
 
 ## Reproducibility
 
 ```bash
-uv sync --dev
-uv run pytest -q
+uv sync --dev --locked
+cp .env.example .env
+uv run pytest -m "not live"
+uv run python scripts/run_phase4_demo.py
 uv run python scripts/run_phase5_experiment.py --dry-run
 uv run python scripts/run_phase5_experiment.py --limit 3 \
-  --output results/raw/phase5_pilot.jsonl --resume
+  --output results/raw/phase5_pilot.jsonl
 uv run python scripts/summarize_phase5.py \
   --input results/raw/phase5_pilot.jsonl
 ```
 
-The pilot JSONL records actual prompts' outputs, errors, latency, retrieval
-chunks, scores, source languages, pages, and URLs. The runner flushes records
-incrementally and resumes completed keys. Reviewers should treat output quality
-as exploratory until human scoring and claim-level evidence review are
-completed.
+The Phase 5 dry run makes no provider or embedding calls. A real run requires
+explicit hosted-provider configuration and may incur cost; do not rerun it
+merely to reproduce the historical table. The runner flushes records
+incrementally and supports `--resume`. Reviewers should treat output quality as
+exploratory until human scoring and claim-level evidence review are completed.
 
 ## Submission limitations
 
 - No human accuracy, factuality, or translation score is reported.
 - Similarity scores are not correctness measures.
 - Citation linkage is not semantic proof.
+- The documented pilot is small and incomplete; it does not support a
+  statistically significant improvement claim.
 - Hosted-model behavior depends on account quota and model availability.
 - Source extraction and regulatory currency require human review for
   high-stakes use.
+
+## Relevant artifacts
+
+- [Phase 3.5 workbook](../outputs/phase3_5/retrieval_benchmark_review.xlsx)
+- [Phase 3.5 report](./phase3_5_report.md)
+- [Phase 5 results](./phase5_results.md)
+- [Retrieval pilot report](./retrieval_pilot.md)

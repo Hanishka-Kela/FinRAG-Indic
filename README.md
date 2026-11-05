@@ -38,6 +38,21 @@ Chat Completions, pytest, and Pillow for the Phase 5 PNG summary.
 The full component flow and evaluation conditions are in
 [docs/architecture.md](docs/architecture.md).
 
+## System architecture and RAG workflow
+
+Streamlit sends a selected-language question to FastAPI. The backend validates
+the request, applies retrieval-only abbreviation normalization, embeds the
+query with pinned BGE-M3, searches the preserved multilingual FAISS index, and
+passes retrieved passages and provenance to the configured Gemini
+OpenAI-compatible endpoint. Citation markers are checked against retrieved
+evidence before the response is returned; insufficient evidence or unsafe
+personalized requests produce an abstention.
+
+## Supported languages
+
+The interface supports English (`en`), Hindi (`hi`), and Tamil (`ta`). Language
+selection is explicit in the UI and validated by the API.
+
 ## Current status
 
 **Implemented in Phase 2:**
@@ -109,8 +124,8 @@ The full component flow and evaluation conditions are in
 
 - Final integration audit and startup smoke checks completed.
 - Architecture diagram: [docs/architecture.md](docs/architecture.md).
-- Demonstration guide: [docs/demo_guide.md](docs/demo_guide.md).
-- Research-paper handoff: [docs/research_handoff.md](docs/research_handoff.md).
+- Demonstration guide: [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md).
+- Research-paper handoff: [docs/RESEARCH_HANDOFF.md](docs/RESEARCH_HANDOFF.md).
 
 **Known limitations:**
 
@@ -133,7 +148,7 @@ Items listed as remaining are not implemented or experimentally validated.
 - Tamil: `முதலீட்டில் பல்வகைப்படுத்தல் என்றால் என்ன?`
 - Abbreviation handling: `What is SI?`
 
-See [docs/demo_guide.md](docs/demo_guide.md) for a complete walkthrough,
+See [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md) for a complete walkthrough,
 including source expanders, abbreviation handling, helpful personalized
 abstention, and an unsupported-question abstention example.
 
@@ -281,7 +296,7 @@ the backend as retrieval-unavailable errors rather than exposing credentials.
 ## Run tests
 
 ```bash
-uv run pytest
+uv run pytest -m "not live"
 ```
 
 Run the optional real-model test only after downloading the pinned weights:
@@ -386,12 +401,26 @@ translation status, evidence mapping, and human-review status. No evaluation
 score will be reported without actual experiment output.
 
 See `docs/reproducibility.md` for pinned revisions, artifact locations, and
-integrity checks.
+integrity checks. Official source manifests are
+[`configs/sources.json`](configs/sources.json) and
+[`configs/sources_extension.json`](configs/sources_extension.json); the
+preserved production index is under
+[`data/indexes/multilingual-genuine-v2`](data/indexes/multilingual-genuine-v2).
+
+## Research and academic context
+
+This repository is the technical implementation and reproducibility package,
+not the journal manuscript. The exploratory Phase 5 pilot, its conditions,
+limitations, and the distinction between citation linkage and factual
+correctness are summarized in
+[docs/RESEARCH_HANDOFF.md](docs/RESEARCH_HANDOFF.md). No statistically
+significant improvement or factual-accuracy claim should be inferred from the
+small pilot.
 
 ## Research handoff
 
 The consolidated research-paper handoff is in
-[docs/research_handoff.md](docs/research_handoff.md). It records the corpus,
+[docs/RESEARCH_HANDOFF.md](docs/RESEARCH_HANDOFF.md). It records the corpus,
 architecture, experimental conditions, corrected pilot metrics, artifacts,
 limitations, and reproducibility commands. No credentials, human scores, or
 fabricated findings are included.
