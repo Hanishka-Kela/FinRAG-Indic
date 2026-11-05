@@ -174,6 +174,32 @@ The frontend reads `FINRAG_FRONTEND_API_URL`, which defaults to
 `http://127.0.0.1:8000`. The first chat request loads BGE-M3 and may be slower
 than subsequent requests.
 
+## Temporary public demo with Cloudflare Quick Tunnel
+
+For a zero-cost temporary HTTPS demo, install Cloudflare's local tunnel
+client once:
+
+```bash
+brew install cloudflare/cloudflare/cloudflared
+```
+
+Then run from the repository root:
+
+```bash
+./scripts/run_public_demo.sh
+```
+
+The script starts FastAPI and Streamlit on localhost, verifies both health
+endpoints, and exposes only Streamlit through a temporary
+`trycloudflare.com` URL. FastAPI remains local and the existing `.env`
+configuration is used by the backend. No Cloudflare account or API key is
+required for a Quick Tunnel.
+
+Share only the printed HTTPS URL. Do not share the local FastAPI URL, logs, or
+`.env` file. Press `Ctrl-C` in the launcher terminal to stop FastAPI,
+Streamlit, and `cloudflared` together. The URL is temporary and changes on
+the next run.
+
 ## Docker and Hugging Face Spaces deployment preparation
 
 The repository includes a single-container deployment for Hugging Face Spaces:
