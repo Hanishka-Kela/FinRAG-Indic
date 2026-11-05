@@ -1,9 +1,42 @@
+---
+title: FinRAG-Indic
+emoji: 💰
+sdk: docker
+app_port: 7860
+---
+
 # FinRAG-Indic
 
 FinRAG-Indic is a research implementation for an evidence-grounded financial
 literacy assistant supporting English, Hindi, and Tamil. The project is being
 built in reviewed phases so that implemented features, design proposals, and
 experimentally validated behavior remain distinct.
+
+## Project overview
+
+### Problem statement
+
+Financial-literacy information is distributed across regulator documents, often
+in English and difficult to navigate in regional languages. FinRAG-Indic
+provides accessible explanations grounded in retrieved RBI and SEBI passages
+while showing the source metadata used for factual claims.
+
+### Objectives
+
+- Support manual English, Hindi, and Tamil response selection.
+- Retrieve multilingual evidence with pinned BGE-M3 and FAISS.
+- Generate grounded explanations through an account-configured Gemini model.
+- Abstain when evidence or provider responses are insufficient.
+- Preserve provenance, citations, review flags, and reproducible experiments.
+
+### Technology stack
+
+Python 3.13, `uv`, FastAPI, Streamlit, Pydantic Settings, FAISS
+`IndexFlatIP`, BGE-M3, the asynchronous OpenAI-compatible SDK, Gemini
+Chat Completions, pytest, and Pillow for the Phase 5 PNG summary.
+
+The full component flow and evaluation conditions are in
+[docs/architecture.md](docs/architecture.md).
 
 ## Current status
 
@@ -53,23 +86,56 @@ experimentally validated behavior remain distinct.
   plus the deterministic mock used by default for local development and tests.
 - Grounded prompting, citation-marker validation, conservative abstention, and
   sensitive financial-information rejection.
+- Helpful abstention for personalized loan and investment decisions, including
+  missing-information guidance and one localized clarification question.
+- Response latency breakdown for retrieval, initial generation, citation
+  correction, and total request time.
 - `POST /chat`, `GET /health`, and `GET /system/status` FastAPI endpoints.
 - Functional Streamlit chat, manual English/Hindi/Tamil selection, history,
   source expanders, backend status, loading state, and clear-chat control.
 
-**Remaining or not experimentally validated:**
+**Implemented in Phase 5:**
+
+- Retrieval-only financial abbreviation normalization in production chat and
+  evaluation runs.
+- Separate LLM-only, immutable English RAG, and multilingual RAG conditions.
+- Resumable incremental pilot runner with bounded retries and dry-run request
+  estimates.
+- Citation-reference, latency, success, abstention, language-signal, and
+  retrieval-observation reporting.
+- Reviewer CSV template and generated summary tables/figure.
+
+**Phase 6 handoff:**
+
+- Final integration audit and startup smoke checks completed.
+- Architecture diagram: [docs/architecture.md](docs/architecture.md).
+- Demonstration guide: [docs/demo_guide.md](docs/demo_guide.md).
+- Research-paper handoff: [docs/research_handoff.md](docs/research_handoff.md).
+
+**Known limitations:**
 
 - NPCI acquisition: the approved exact endpoint returned HTTP 403 and was not
   replaced or bypassed. RBI and SEBI PDFs were acquired and verified.
 - Human review of repaired Hindi text, drafted Hindi/Tamil questions, and all
   candidate evidence mappings.
-- Hosted-model quality, latency, and cost. No hosted model is assumed available
-  and no live provider result is reported without configured access.
+- Hosted-model quality, latency, and cost depend on the configured Gemini
+  account and quota.
 - FABRIC-derived, human-reviewed evaluation records.
-- Full experiments A-C and formal evaluation metrics. Experiment D currently
-  has only an exploratory, ungraded direct-retrieval pilot.
+- The Phase 5 pilot is exploratory; the complete 135-request benchmark was not
+  run and no human accuracy score is reported.
 
 Items listed as remaining are not implemented or experimentally validated.
+
+## Example questions
+
+- English: `What is simple interest?`
+- Hindi: `अगर UPI लेन-देन असफल हो जाए तो मुझे क्या करना चाहिए?`
+- Tamil: `முதலீட்டில் பல்வகைப்படுத்தல் என்றால் என்ன?`
+- Abbreviation handling: `What is SI?`
+
+See [docs/demo_guide.md](docs/demo_guide.md) for a complete walkthrough,
+including source expanders, abbreviation handling, helpful personalized
+abstention, and an unsupported-question abstention example.
 
 ## Requirements
 
@@ -107,6 +173,84 @@ uv run streamlit run frontend/streamlit_app.py
 The frontend reads `FINRAG_FRONTEND_API_URL`, which defaults to
 `http://127.0.0.1:8000`. The first chat request loads BGE-M3 and may be slower
 than subsequent requests.
+
+## Docker and Hugging Face Spaces deployment preparation
+
+The repository includes a single-container deployment for Hugging Face Spaces:
+
+- Public Streamlit listens on port `7860`, the Spaces default.
+- FastAPI listens only on `127.0.0.1:8000` inside the container.
+- `docker/start.sh` validates the v2 index, starts FastAPI, waits for its
+  health endpoint, and then starts Streamlit.
+- BGE-M3 is downloaded lazily at runtime into the container cache; the model
+  cache is intentionally not copied into the image.
+
+Build and run locally from a checkout that contains the existing v2 index:
+
+```bash
+docker build -t finrag-indic .
+docker run --rm -p 7860:7860 \
+  -e FINRAG_LLM_PROVIDER=openai \
+  -e FINRAG_LLM_MODEL=gemini-flash-lite-latest \
+  -e FINRAG_LLM_API_KEY=<space-secret> \
+  -e FINRAG_LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/ \
+  finrag-indic
+```
+
+For Hugging Face Spaces, create a Docker Space and configure these as Space
+secrets or variables (never in the repository): `FINRAG_LLM_PROVIDER=openai`,
+`FINRAG_LLM_MODEL`, `FINRAG_LLM_API_KEY`, and
+`FINRAG_LLM_BASE_URL`. The Space must expose port `7860`. The
+`data/indexes/multilingual-genuine-v2` directory must be present in the Space
+build context; the Dockerfile does not rebuild or download an index.
+
+Exact Space preparation:
+
+1. Create a new Hugging Face Space, choose **Docker**, and set the exposed
+   application port to `7860`.
+2. Upload `Dockerfile`, `.dockerignore`, `docker/start.sh`, the `src/` and
+   `frontend/` directories, `pyproject.toml`, `uv.lock`, `README.md`, and only
+   the three files under `data/indexes/multilingual-genuine-v2/`.
+3. If using Git from this checkout, add the deployment package with:
+
+   ```bash
+   git add Dockerfile .dockerignore docker/start.sh src frontend \
+     pyproject.toml uv.lock README.md data/indexes/multilingual-genuine-v2
+   ```
+
+   The repository ignore rules keep the English baseline, other indexes,
+   model cache, results, and local data out of this deployment package.
+4. In the Space **Settings**, add `FINRAG_LLM_PROVIDER`, `FINRAG_LLM_MODEL`,
+   `FINRAG_LLM_API_KEY`, and `FINRAG_LLM_BASE_URL` as secrets or variables.
+5. Wait for the Space build logs to show FastAPI health readiness followed by
+   Streamlit startup, then open the generated Space URL.
+
+### Resource expectations and blockers
+
+The v2 index itself is approximately 2 MB, but the pinned BGE-M3 model cache
+is approximately 7.2 GB in the current development environment. The
+container also needs memory for Python, PyTorch, FAISS, and BGE-M3 inference;
+allocate at least 8 GB RAM and preferably 16 GB for a reliable cold start.
+Provide at least 10 GB writable disk for the model cache and temporary files.
+The application passes `data/models/sentence-transformers` as the
+SentenceTransformer `cache_folder`, so in the container the effective model
+cache is `/app/data/models/sentence-transformers`; the local 9.3 GB cache is
+not copied into the image.
+CPU-only inference is supported but the first model load can take several
+minutes and each query may be slow. A Space with less memory or disk may fail
+while loading BGE-M3.
+
+The local index artifacts are ignored by Git in this project. Therefore,
+public deployment is blocked until the v2 index is deliberately included in
+the Space repository or supplied through an approved artifact mechanism.
+No index rebuild is performed by this deployment preparation. The Docker
+build fails early if the required index files are absent.
+
+If `FINRAG_LLM_API_KEY` or `FINRAG_LLM_MODEL` is missing, the container still
+starts but reports degraded status and chat requests cannot use hosted
+generation. If the index is missing, startup exits with the specific missing
+artifact. BGE-M3 loading remains lazy; model-loading failures are returned by
+the backend as retrieval-unavailable errors rather than exposing credentials.
 
 ## Run tests
 
@@ -217,3 +361,11 @@ score will be reported without actual experiment output.
 
 See `docs/reproducibility.md` for pinned revisions, artifact locations, and
 integrity checks.
+
+## Research handoff
+
+The consolidated research-paper handoff is in
+[docs/research_handoff.md](docs/research_handoff.md). It records the corpus,
+architecture, experimental conditions, corrected pilot metrics, artifacts,
+limitations, and reproducibility commands. No credentials, human scores, or
+fabricated findings are included.

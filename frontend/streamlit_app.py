@@ -74,6 +74,8 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
         if message["role"] == "assistant":
+            if message.get("needs_clarification"):
+                st.info("A clarification is needed before giving personalized guidance.")
             show_sources(message)
 
 question = st.chat_input("Ask a financial-literacy question")
@@ -90,12 +92,16 @@ if question:
                     "content": result["answer"],
                     "citations": result.get("citations", []),
                     "evidence": result.get("evidence", []),
+                    "needs_clarification": result.get("needs_clarification", False),
                 }
                 st.markdown(result["answer"])
                 if result.get("abstained"):
-                    st.info(
-                        "The assistant abstained because grounded evidence was insufficient."
-                    )
+                    if result.get("needs_clarification"):
+                        st.info("A clarification is needed before giving personalized guidance.")
+                    else:
+                        st.info(
+                            "The assistant abstained because grounded evidence was insufficient."
+                        )
                 show_sources(assistant_message)
                 latency = result.get("latency", {})
                 if latency.get("total_ms") is not None:
@@ -113,4 +119,3 @@ if question:
                         "evidence": [],
                     }
                 )
-

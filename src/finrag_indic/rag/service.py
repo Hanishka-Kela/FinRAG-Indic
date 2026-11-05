@@ -17,6 +17,7 @@ from finrag_indic.errors import (
     ProviderRequestError,
     RetrievalUnavailableError,
 )
+from finrag_indic.evaluation.query_normalization import normalize_financial_query
 from finrag_indic.providers.base import TextProvider
 from finrag_indic.providers.mock import DeterministicMockProvider
 from finrag_indic.providers.openai import OpenAIProvider
@@ -41,11 +42,37 @@ _LOCALIZED = {
         "hi": "सेवा अभी प्रमाण-आधारित उत्तर तैयार नहीं कर सकी।",
         "ta": "இப்போது ஆதார அடிப்படையிலான பதிலைச் சேவை உருவாக்க முடியவில்லை.",
     },
+    "clarification": {
+        "en": "Does ₹1,000 refer to your monthly income or your monthly repayment capacity?",
+        "hi": "क्या ₹1,000 आपकी मासिक आय है या आपकी मासिक पुनर्भुगतान क्षमता?",
+        "ta": "₹1,000 என்பது உங்கள் மாத வருமானமா அல்லது மாதத் திருப்பிச் செலுத்தும் திறனா?",
+    },
 }
 
 
 def _localized(kind: str, language: SupportedLanguage) -> str:
     return _LOCALIZED[kind][language]
+
+
+_PERSONALIZED_DECISION_PATTERNS = (
+    r"\bshould\s+i\b",
+    r"\bcan\s+i\s+afford\b",
+    r"\bwhich\s+(?:investment|stock|fund|scheme)\b",
+    r"\bwhat\s+should\s+i\s+(?:buy|invest)\b",
+    r"\bloan\s+(?:lena|len|le)\s+(?:chahiye|chaahiye)\b",
+    r"\b(?:invest|buy)\s+kar(?:u|oon|na)\b",
+    r"(?:लेना|लेनी)\s+चाहिए",
+    r"क्या मैं .*?(?:ले सकता|निवेश कर सकता)",
+    r"(?:வாங்க|எடுக்க)லாமா",
+    r"(?:முதலீடு|கடன்).*?(?:வேண்டுமா|செய்யலாமா)",
+)
+_PERSONALIZED_DECISION_RE = re.compile(
+    "|".join(_PERSONALIZED_DECISION_PATTERNS), re.IGNORECASE
+)
+
+
+def _is_personalized_decision(question: str) -> bool:
+    return bool(_PERSONALIZED_DECISION_RE.search(question))
 
 
 def _evidence_from_hits(hits) -> list[EvidenceReference]:  # type: ignore[no-untyped-def]
@@ -80,8 +107,27 @@ def _citations(evidence: list[EvidenceReference]) -> list[SourceCitation]:
     ]
 
 
+_CITATION_GROUP = re.compile(
+    r"\[\s*S\s*\d+(?:\s*(?:[,;]|\s)\s*S?\s*\d+)*\s*\]",
+    re.IGNORECASE,
+)
+_CITATION_ID = re.compile(r"S\s*(\d+)", re.IGNORECASE)
+
+
+def _normalize_citation_format(answer: str) -> str:
+    def replace_group(match: re.Match[str]) -> str:
+        ids = list(dict.fromkeys(_CITATION_ID.findall(match.group(0))))
+        return " ".join(f"[S{identifier}]" for identifier in ids)
+
+    return _CITATION_GROUP.sub(replace_group, answer)
+
+
 def _invalid_citation_ids(answer: str, evidence: list[EvidenceReference]) -> set[str]:
-    cited = set(re.findall(r"\[(S\d+)\]", answer))
+    cited = {
+        f"S{identifier}"
+        for group in _CITATION_GROUP.findall(answer)
+        for identifier in _CITATION_ID.findall(group)
+    }
     valid = {item.citation_id for item in evidence}
     if not cited:
         return {"missing"}
@@ -112,9 +158,13 @@ class ChatService:
         abstained: bool,
         retrieval_ms: float = 0,
         generation_ms: float = 0,
+        correction_ms: float = 0,
         provider: str | None = None,
         model: str | None = None,
         error: ChatError | None = None,
+        needs_clarification: bool = False,
+        clarification_question: str | None = None,
+        abstention_reason: str | None = None,
     ) -> ChatResponse:
         return ChatResponse(
             answer=answer,
@@ -122,11 +172,15 @@ class ChatService:
             evidence=evidence,
             citations=_citations(evidence),
             abstained=abstained,
+            needs_clarification=needs_clarification,
+            clarification_question=clarification_question,
+            abstention_reason=abstention_reason,
             provider=provider,
             model=model,
             latency=LatencyInfo(
                 retrieval_ms=retrieval_ms,
                 generation_ms=generation_ms,
+                correction_ms=correction_ms,
                 total_ms=(time.perf_counter() - started) * 1000,
             ),
             error=error,
@@ -173,7 +227,8 @@ class ChatService:
         retrieval_started = time.perf_counter()
         try:
             hits = await self.retriever.retrieve(
-                request.question, top_k=self.settings.retrieval_top_k
+                normalize_financial_query(request.question),
+                top_k=self.settings.retrieval_top_k,
             )
         except RetrievalUnavailableError:
             return self._response(
@@ -203,10 +258,12 @@ class ChatService:
                     message="No source passages were retrieved",
                 ),
             )
+        personalized_decision = _is_personalized_decision(request.question)
         prompt = build_grounded_prompt(
             question=request.question,
             language=request.language,
             evidence=evidence,
+            personalized_decision=personalized_decision,
         )
         generation_started = time.perf_counter()
         try:
@@ -240,9 +297,80 @@ class ChatService:
                 ),
             )
         generation_ms = (time.perf_counter() - generation_started) * 1000
-        if not generated.abstained:
-            invalid = _invalid_citation_ids(generated.text, evidence)
-            if invalid:
+        normalized = _normalize_citation_format(generated.text)
+        invalid = _invalid_citation_ids(normalized, evidence)
+        has_citations = invalid != {"missing"}
+        if invalid and (not generated.abstained or has_citations):
+                correction_started = time.perf_counter()
+                correction_prompt = (
+                    "Correct the answer below using only the permitted citation "
+                    "markers. Keep the answer in the selected language. Every "
+                    "factual claim must use one or more markers from this exact "
+                    f"set: {', '.join(item.citation_id for item in evidence)}. "
+                    "If the evidence is insufficient, begin exactly with "
+                    "INSUFFICIENT_EVIDENCE: and explain why without citations. "
+                    "Do not invent or rename a source marker. Use only the "
+                    "evidence supplied below.\n\n"
+                    "Use each marker only where it supports a factual claim; "
+                    "do not repeat identical marker groups.\n\n"
+                    + (
+                        "This is a personalized decision question. Do not give "
+                        "a yes/no recommendation; explain the limitation and "
+                        "ask at most one useful clarification question.\n\n"
+                        if personalized_decision
+                        else ""
+                    )
+                    + "RETRIEVED EVIDENCE:\n"
+                    + "\n".join(
+                        f"{item.citation_id}: {item.title} (page {item.page_number})\n"
+                        f"{item.passage}"
+                        for item in evidence
+                    )
+                    + "\n\n"
+                    f"ANSWER TO CORRECT:\n{normalized}\n"
+                )
+                try:
+                    corrected = await self.provider.generate(
+                        ProviderRequest(
+                            prompt=correction_prompt, language=request.language
+                        )
+                    )
+                except (ProviderConfigurationError, ProviderRequestError):
+                    corrected = None
+                correction_ms = (time.perf_counter() - correction_started) * 1000
+                if corrected is not None:
+                    corrected_text = _normalize_citation_format(corrected.text)
+                    corrected_invalid = _invalid_citation_ids(
+                        corrected_text, evidence
+                    )
+                    corrected_has_citations = corrected_invalid != {"missing"}
+                    if (
+                        (corrected.abstained and not corrected_has_citations)
+                        or not corrected_invalid
+                    ):
+                        return self._response(
+                            started=started,
+                            language=request.language,
+                            answer=corrected_text,
+                            evidence=evidence,
+                            abstained=corrected.abstained or personalized_decision,
+                            retrieval_ms=retrieval_ms,
+                            generation_ms=generation_ms,
+                            correction_ms=correction_ms,
+                            provider=corrected.provider,
+                            model=corrected.model,
+                            needs_clarification=personalized_decision,
+                            clarification_question=(
+                                _localized("clarification", request.language)
+                                if personalized_decision
+                                else None
+                            ),
+                            abstention_reason=(
+                                "personalized_decision"
+                                if personalized_decision
+                                else None
+                            ),
+                        )
                 return self._response(
                     started=started,
                     language=request.language,
@@ -251,23 +379,46 @@ class ChatService:
                     abstained=True,
                     retrieval_ms=retrieval_ms,
                     generation_ms=generation_ms,
+                    correction_ms=correction_ms,
                     provider=generated.provider,
                     model=generated.model,
                     error=ChatError(
                         code="invalid_generated_citations",
-                        message="The generated answer did not contain only valid source markers",
+                        message="The answer could not be safely linked to the retrieved sources",
+                    ),
+                    needs_clarification=personalized_decision,
+                    clarification_question=(
+                        _localized("clarification", request.language)
+                        if personalized_decision
+                        else None
+                    ),
+                    abstention_reason=(
+                        "personalized_decision"
+                        if personalized_decision
+                        else "invalid_citations"
                     ),
                 )
         return self._response(
             started=started,
             language=request.language,
-            answer=generated.text,
+            answer=_normalize_citation_format(generated.text),
             evidence=evidence,
-            abstained=generated.abstained,
+            abstained=generated.abstained or personalized_decision,
             retrieval_ms=retrieval_ms,
             generation_ms=generation_ms,
             provider=generated.provider,
             model=generated.model,
+            needs_clarification=personalized_decision,
+            clarification_question=(
+                _localized("clarification", request.language)
+                if personalized_decision
+                else None
+            ),
+            abstention_reason=(
+                "personalized_decision"
+                if personalized_decision
+                else ("insufficient_evidence" if generated.abstained else None)
+            ),
         )
 
 

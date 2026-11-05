@@ -12,7 +12,11 @@ from finrag_indic.errors import (
 from finrag_indic.knowledge.models import Chunk, Language, RetrievalHit
 from finrag_indic.providers.mock import DeterministicMockProvider
 from finrag_indic.rag.safety import contains_sensitive_financial_information
-from finrag_indic.rag.service import ChatService
+from finrag_indic.rag.service import (
+    ChatService,
+    _invalid_citation_ids,
+    _normalize_citation_format,
+)
 
 
 def hit(*, rank: int = 1, document_language: Language = Language.ENGLISH) -> RetrievalHit:
@@ -38,9 +42,10 @@ class FakeRetriever:
         self.hits = hits or []
         self.fail = fail
         self.last_top_k: int | None = None
+        self.last_question: str | None = None
 
     async def retrieve(self, question: str, *, top_k: int) -> list[RetrievalHit]:
-        del question
+        self.last_question = question
         self.last_top_k = top_k
         if self.fail:
             raise RetrievalUnavailableError("unavailable")
@@ -55,6 +60,18 @@ class RecordingProvider:
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
         self.requests.append(request)
         return ProviderResponse(text=self.text, provider="recording", model="test-model")
+
+
+class SequenceProvider:
+    def __init__(self, responses: list[str]) -> None:
+        self.responses = iter(responses)
+        self.requests: list[ProviderRequest] = []
+
+    async def generate(self, request: ProviderRequest) -> ProviderResponse:
+        self.requests.append(request)
+        return ProviderResponse(
+            text=next(self.responses), provider="recording", model="test-model"
+        )
 
 
 class FailingProvider:
@@ -97,6 +114,71 @@ async def test_selected_language_reaches_grounded_prompt(
 
 
 @pytest.mark.anyio
+async def test_retrieval_expands_financial_abbreviation_but_prompt_keeps_question(
+    tmp_path: Path,
+) -> None:
+    provider = RecordingProvider()
+    retriever = FakeRetriever([hit()])
+    service = ChatService(
+        settings=settings(tmp_path), retriever=retriever, provider=provider
+    )
+
+    await service.chat(ChatRequest(question="What is SI?", language="en"))
+
+    assert retriever.last_question == "What is SI (Simple Interest)?"
+    assert "What is SI?" in provider.requests[0].prompt
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("language", "expected_question"),
+    [
+        ("en", "Does ₹1,000 refer to your monthly income or your monthly repayment capacity?"),
+        ("hi", "क्या ₹1,000 आपकी मासिक आय है या आपकी मासिक पुनर्भुगतान क्षमता?"),
+        ("ta", "₹1,000 என்பது உங்கள் மாத வருமானமா அல்லது மாதத் திருப்பிச் செலுத்தும் திறனா?"),
+    ],
+)
+async def test_personalized_loan_question_gets_helpful_abstention(
+    tmp_path: Path, language: str, expected_question: str
+) -> None:
+    provider = RecordingProvider(
+        "I cannot decide this for you. Please compare your income and expenses [S1]."
+    )
+    service = ChatService(
+        settings=settings(tmp_path),
+        retriever=FakeRetriever([hit()]),
+        provider=provider,
+    )
+
+    result = await service.chat(
+        ChatRequest(
+            question="Kya mujhe ₹1,00,000 ka loan lena chahiye? Meri monthly income 1000 repay hai.",
+            language=language,
+        )
+    )
+
+    assert result.abstained
+    assert result.needs_clarification
+    assert result.clarification_question == expected_question
+    assert result.abstention_reason == "personalized_decision"
+    assert "[S1]" in result.answer
+    assert "personalized financial decision" in provider.requests[0].prompt
+
+
+@pytest.mark.anyio
+async def test_general_emi_question_is_not_personalized_abstention(tmp_path: Path) -> None:
+    provider = RecordingProvider("EMI is a regular payment [S1].")
+    service = ChatService(
+        settings=settings(tmp_path), retriever=FakeRetriever([hit()]), provider=provider
+    )
+
+    result = await service.chat(ChatRequest(question="What is EMI?", language="en"))
+
+    assert not result.abstained
+    assert not result.needs_clarification
+
+
+@pytest.mark.anyio
 async def test_empty_retrieval_abstains_without_generation(tmp_path: Path) -> None:
     provider = RecordingProvider()
     service = ChatService(
@@ -122,6 +204,75 @@ async def test_invalid_generated_citation_forces_abstention(tmp_path: Path) -> N
 
     assert result.abstained
     assert result.error and result.error.code == "invalid_generated_citations"
+
+
+@pytest.mark.parametrize(
+    ("answer", "expected"),
+    [
+        ("Claim [S1].", "Claim [S1]."),
+        ("Claim [S 1, S2].", "Claim [S1] [S2]."),
+        ("Claim [s1;  S 2].", "Claim [S1] [S2]."),
+        ("Claim [S1, S1, S2].", "Claim [S1] [S2]."),
+    ],
+)
+def test_citation_format_variations_are_normalized(answer: str, expected: str) -> None:
+    assert _normalize_citation_format(answer) == expected
+
+
+def test_citation_validation_rejects_unknown_and_mixed_ids() -> None:
+    evidence = [hit()]
+    from finrag_indic.rag.service import _evidence_from_hits
+
+    references = _evidence_from_hits(evidence)
+    assert _invalid_citation_ids("Claim [S99].", references) == {"S99"}
+    assert _invalid_citation_ids("Claim [S1, S99].", references) == {"S99"}
+    assert _invalid_citation_ids("Claim without a marker.", references) == {"missing"}
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("language", "text"),
+    [
+        ("en", "Grounded answer [S1]."),
+        ("hi", "उत्तर [S1]।"),
+        ("ta", "பதில் [S1]."),
+    ],
+)
+async def test_invalid_citation_is_corrected_once(
+    tmp_path: Path, language: str, text: str
+) -> None:
+    provider = SequenceProvider(["गलत उत्तर [S99].", text])
+    service = ChatService(
+        settings=settings(tmp_path),
+        retriever=FakeRetriever([hit()]),
+        provider=provider,
+    )
+
+    result = await service.chat(ChatRequest(question="Question", language=language))
+
+    assert not result.abstained
+    assert result.answer == text
+    assert len(provider.requests) == 2
+    assert result.latency.correction_ms >= 0
+    assert result.latency.generation_ms >= 0
+
+
+@pytest.mark.anyio
+async def test_failed_citation_correction_abstains_safely(tmp_path: Path) -> None:
+    provider = SequenceProvider(["Unsupported [S99].", "Still unsupported [S99]."])
+    service = ChatService(
+        settings=settings(tmp_path),
+        retriever=FakeRetriever([hit()]),
+        provider=provider,
+    )
+
+    result = await service.chat(ChatRequest(question="Question", language="en"))
+
+    assert result.abstained
+    assert result.answer == "The available sources do not contain enough evidence to answer this safely."
+    assert result.error and result.error.code == "invalid_generated_citations"
+    assert "safely linked" in result.error.message
+    assert result.latency.correction_ms >= 0
 
 
 @pytest.mark.anyio

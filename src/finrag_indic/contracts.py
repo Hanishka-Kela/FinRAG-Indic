@@ -80,6 +80,7 @@ class LatencyInfo(BaseModel):
 
     retrieval_ms: float = Field(ge=0)
     generation_ms: float = Field(ge=0)
+    correction_ms: float = Field(default=0, ge=0)
     total_ms: float = Field(ge=0)
 
 
@@ -99,6 +100,9 @@ class ChatResponse(BaseModel):
     evidence: list[EvidenceReference]
     citations: list[SourceCitation]
     abstained: bool
+    needs_clarification: bool = False
+    clarification_question: str | None = None
+    abstention_reason: str | None = None
     provider: str | None = None
     model: str | None = None
     latency: LatencyInfo
@@ -116,4 +120,3 @@ class SystemStatusResponse(BaseModel):
     retrieval_index_available: bool
     embedding_model: str
     supported_languages: list[SupportedLanguage]
-

@@ -1,52 +1,82 @@
-# Architecture
+# FinRAG-Indic architecture
 
-## Implemented through Phase 3
+## Production chatbot
+
+```mermaid
+flowchart LR
+    U[User] --> S[Streamlit]
+    S --> A[FastAPI]
+    A --> N[Query normalization]
+    N --> E[BGE-M3 pinned embedding]
+    E --> F[FAISS multilingual-genuine-v2]
+    F --> R[Retrieved evidence and metadata]
+    R --> G[Gemini OpenAI-compatible Chat Completions]
+    G --> O[Grounded answer]
+    O -->     C[Citations, abstention and clarification status]
+    C --> S
+```
+
+The user selects English, Hindi, or Tamil in Streamlit. FastAPI validates the
+request, rejects likely credentials or excessively long questions, expands
+supported financial abbreviations for retrieval only, and preserves the
+original question in the generation prompt. BGE-M3 is pinned to revision
+`5617a9f61b028005a4858fdac845db406aefb181`. The default index is the
+269-vector `multilingual-genuine-v2` FAISS `IndexFlatIP` corpus.
+
+Retrieved chunks retain document ID, title, source language, page, URL, score,
+and extraction review flags. The grounding prompt instructs Gemini to use only
+the supplied evidence, avoid credentials and personalized investment advice,
+and emit resolvable `[S1]`-style markers. Invalid or missing markers cause
+conservative abstention for non-abstained generated answers. Citation
+resolution is provenance linkage, not proof of claim-level factual support.
+Personalized decision questions remain abstained while the model may provide
+evidence-grounded general education, identify missing inputs, and ask one
+localized clarification question. Responses expose retrieval, generation,
+citation-correction, and total latency separately.
+
+## Corpus and index construction
 
 ```text
 approved source manifest
-  -> official-domain downloader
-  -> immutable raw file + SHA-256
-  -> PDF/HTML extraction
-  -> Unicode normalization
+  -> exact official URL acquisition and SHA-256
+  -> PDF/HTML extraction and Unicode normalization
   -> page/section-aware chunks
-  -> replaceable dense embedding provider
-  -> normalized float32 vectors
-  -> FAISS IndexFlatIP + checked chunk mapping
-  -> top-k hits with scores and original source metadata
+  -> normalized BGE-M3 vectors
+  -> FAISS IndexFlatIP
+  -> checked vectors/chunks/metadata mapping
 ```
 
-The manifest is the control boundary. Candidate or rejected URLs cannot be
-downloaded. Acquired files retain a retrieval timestamp, checksum, local path,
-and extraction state. The ingestion pipeline never substitutes an unofficial
-source after a failure.
+The immutable English baseline is `data/indexes/english` (107 chunks). The
+production multilingual view is `data/indexes/multilingual-genuine-v2` (269
+chunks). Index loading checks dimensions, counts, embedding revision, and chunk
+mapping checksums. No Phase 6 work rebuilds either index.
 
-`EmbeddingProvider` is replaceable. The research candidate is BGE-M3 pinned to
-revision `5617a9f61b028005a4858fdac845db406aefb181`; routine tests use a
-deterministic normalized mock. Mock embeddings are never valid research output.
+## Evaluation pipeline
 
-Each persisted index contains:
+```mermaid
+flowchart LR
+    B[Exploratory 15 x 3 benchmark] --> X[Phase 5 runner]
+    X --> L[LLM-only]
+    X --> EN[English baseline RAG]
+    X --> ML[Multilingual v2 RAG]
+    EN --> M[Recorded answers, latency, retrieval metadata]
+    ML --> M
+    L --> M
+    M --> T[Summary CSV/JSON, reviewer CSV, PNG]
+```
 
-- `vectors.faiss`: exact `IndexFlatIP` vectors;
-- `chunks.jsonl`: ordered vector-to-chunk mapping;
-- `metadata.json`: schema version, corpus view, embedding revision, dimensions,
-  counts, and mapping checksum.
+The runner uses the same configured Gemini provider and comparable generation
+settings. LLM-only receives no evidence. English RAG uses the immutable
+English index. Multilingual RAG uses `multilingual-genuine-v2`. Results are
+appended incrementally to JSONL and can resume by canonical ID, language, and
+condition. The benchmark translations and evidence mappings remain
+`candidate_unverified`; reviewer score fields are intentionally blank.
 
-Loading rejects missing files, embedding mismatches, dimensional mismatches,
-count mismatches, and modified chunk mappings.
+## Component map
 
-## Corpus views
-
-- `english`: English chunks only.
-- `multilingual`: all acquired language chunks.
-
-The `coverage_group` field links official translations of the same material.
-`controlled_coverage_views` includes only groups containing English, Hindi, and
-Tamil, preventing a controlled comparison from silently using unequal facts.
-
-## Not implemented
-
-LLM answer generation, generated citations, chatbot behavior, query
-translation, and full experiments remain outside Phase 3. Experiment D is
-represented in the retrieval pilot as direct Hindi/Tamil embedding retrieval
-against the English index, without query translation.
-
+- [frontend/streamlit_app.py](../frontend/streamlit_app.py): demonstration UI.
+- [src/finrag_indic/api/app.py](../src/finrag_indic/api/app.py): HTTP API.
+- [src/finrag_indic/rag/service.py](../src/finrag_indic/rag/service.py): production orchestration.
+- [src/finrag_indic/evaluation/query_normalization.py](../src/finrag_indic/evaluation/query_normalization.py): retrieval-only abbreviation expansion.
+- [src/finrag_indic/evaluation/experimental.py](../src/finrag_indic/evaluation/experimental.py): Phase 5 conditions and metrics.
+- [src/finrag_indic/providers/openai.py](../src/finrag_indic/providers/openai.py): Gemini-compatible async adapter.

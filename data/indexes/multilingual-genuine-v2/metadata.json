@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "index_type": "IndexFlatIP",
+  "corpus_view": "multilingual-genuine-v2",
+  "vector_count": 269,
+  "dimension": 1024,
+  "embedding": {
+    "provider": "sentence-transformers",
+    "model_id": "BAAI/bge-m3",
+    "revision": "5617a9f61b028005a4858fdac845db406aefb181",
+    "dimension": 1024,
+    "normalized": true
+  },
+  "chunks_sha256": "bd1151424e58d6680aa26350ef258124cf94c6f33769084693028c6ce6cdcb30"
+}

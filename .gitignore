@@ -26,6 +26,10 @@ data/processed/*
 !data/processed/.gitkeep
 data/indexes/*
 !data/indexes/.gitkeep
+!data/indexes/multilingual-genuine-v2/
+!data/indexes/multilingual-genuine-v2/vectors.faiss
+!data/indexes/multilingual-genuine-v2/chunks.jsonl
+!data/indexes/multilingual-genuine-v2/metadata.json
 data/models/*
 !data/models/.gitkeep
 results/raw/*
@@ -40,3 +44,5 @@ results/figures/*
 *.index
 *.safetensors
 
+# Deployment package: include only the existing multilingual v2 vector index.
+!data/indexes/multilingual-genuine-v2/vectors.faiss
