@@ -59,3 +59,29 @@ Experimentally observed but not formally evaluated:
 - Tamil documents reached rank 1 for 10/45 exploratory variants; Hindi documents
   reached rank 1 for 0/45. Extraction quality is a major confounder.
 - No evidence mapping is verified, so formal recall values remain null.
+
+## Phase 3.5
+
+Implemented and run:
+
+- CFF glyph-name recovery and Devanagari visual-order repair for the official
+  Hindi PDF, without translation or PDF replacement.
+- Row-bounded RBI failed-transaction table extraction with payment-system,
+  page, timeline, compensation, and source provenance.
+- Separate 269-vector `multilingual-genuine-v2` index; the 107-vector English
+  baseline and 262-vector v1 index remain unchanged.
+- Reviewer workbook with all 45 variants and all review decisions initialized
+  to `Unverified`.
+- Evaluation summaries for the English baseline and v2 index, including
+  per-language, per-topic, and failure views, gated to human-approved evidence.
+- Unit tests for ligature decoding, Devanagari order, RBI table boundaries, and
+  evaluation grouping.
+
+Observed but not formally evaluated:
+
+- The repaired Hindi title reads `वित्तीय शिक्षा पुस्तिका`; one unresolved
+  replacement glyph and some word-level anomalies remain across the document.
+- Specific UPI transfer and merchant table rows ranked first for their matching
+  English, Hindi, and Tamil questions in v2. These are candidate observations,
+  not gold judgments or comparative effectiveness results.
+- Zero mappings are human-approved, so all Recall@K results remain null.

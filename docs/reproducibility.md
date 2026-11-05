@@ -41,6 +41,18 @@ uv run python scripts/acquire_sources.py \
 HF_HUB_OFFLINE=1 uv run python scripts/build_multilingual_extension.py
 HF_HUB_OFFLINE=1 uv run python scripts/prepare_retrieval_benchmark.py
 HF_HUB_OFFLINE=1 uv run python scripts/evaluate_retrieval.py
+
+# Phase 3.5: prepare chunks separately so PDF/font and FAISS/PyTorch native
+# libraries do not share the extraction process on macOS.
+HF_HUB_OFFLINE=1 uv run python scripts/build_quality_index.py --prepare-only
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+  FINRAG_EMBEDDING_BATCH_SIZE=1 \
+  uv run python scripts/embed_quality_chunks.py
+HF_HUB_OFFLINE=1 uv run python scripts/prepare_retrieval_benchmark.py \
+  --multilingual-index data/indexes/multilingual-genuine-v2 \
+  --output configs/benchmarks/retrieval_v2_candidates.json
+uv run python scripts/evaluate_retrieval.py \
+  --output data/processed/retrieval_evaluation_v2.json
 ```
 
 Raw sources, embeddings, FAISS indexes, and raw outputs are Git-ignored.
@@ -54,6 +66,12 @@ builder refuses to proceed if any differs. The extension produced 262 vectors:
 
 The rejected FAQ challenge response is preserved and checksummed but marked
 failed. It contributes no chunks.
+
+The Phase 3.5 build produced 269 vectors: 120 English, 97 Hindi, and 52
+Tamil. Its corpus view is `multilingual-genuine-v2`. The separate preparation
+step validates the English baseline lock before writing the v2 chunk artifact.
+Embedding workers use small isolated processes to avoid a reproducible macOS
+native-library conflict between eagerly loaded FAISS and PyTorch/OpenMP.
 
 ## Real BGE-M3 verification
 
@@ -91,8 +109,9 @@ chunk IDs.
 The durable abridged report is in `docs/retrieval_pilot.md`; the complete raw
 passages, scores, source IDs, URLs, and modes are in the ignored JSONL artifact.
 
-The extension benchmark has 15 canonical questions and 45 variants. Candidate
-passages are in `configs/benchmarks/retrieval_v1_candidates.json`. The evaluator
-currently reports zero evaluated variants and null Recall@1/3/5 because all
-evidence mappings are unverified. See `docs/methodology.md` for the review gate.
+The extension benchmark has 15 canonical questions and 45 variants. Phase 3.5
+candidate passages are in `configs/benchmarks/retrieval_v2_candidates.json`.
+The evaluator currently reports zero evaluated variants and null Recall@1/3/5
+for both indexes, every language, and every topic because all evidence mappings
+are unverified. See `docs/methodology.md` for the review gate.
 

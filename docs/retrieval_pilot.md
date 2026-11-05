@@ -67,3 +67,25 @@ The complete review artifact is
 `configs/benchmarks/retrieval_v1_candidates.json`. It contains top-five passages,
 scores, chunk IDs, document IDs, language, page, URL, and flags for both indexes.
 All 45 records remain `candidate_unverified`; Recall@1/3/5 are therefore null.
+
+## Phase 3.5 table-boundary check — 2026-11-05
+
+The v2 index contains row-bounded RBI TAT chunks. Actual rank-1 results were:
+
+| Question | Language | v2 rank-1 score | Rank-1 chunk |
+|---|---|---:|---|
+| Failed UPI transfer | English | 0.696407 | `rbi-failed-transactions-tat-2019-a0b3dab3dd67679f` |
+| Failed UPI transfer | Hindi | 0.707450 | `rbi-failed-transactions-tat-2019-a0b3dab3dd67679f` |
+| Failed UPI transfer | Tamil | 0.671883 | `rbi-failed-transactions-tat-2019-a0b3dab3dd67679f` |
+| UPI merchant payment failure | English | 0.803476 | `rbi-failed-transactions-tat-2019-bd5b8e3bcff5b28d` |
+| UPI merchant payment failure | Hindi | 0.747880 | `rbi-failed-transactions-tat-2019-bd5b8e3bcff5b28d` |
+| UPI merchant payment failure | Tamil | 0.714200 | `rbi-failed-transactions-tat-2019-bd5b8e3bcff5b28d` |
+
+The first chunk is the page-4 beneficiary-not-credited transfer row (T+1); the
+second is the distinct page-4 merchant-confirmation row (T+5). AePS content is
+not present in either chunk. These are exploratory retrieval outputs. They are
+not human relevance labels and do not establish v2 superiority.
+
+Complete v2 candidates are in
+`configs/benchmarks/retrieval_v2_candidates.json`. Formal evaluation remains
+empty: 0/45 variants have human-approved evidence, so Recall@1/3/5 are null.

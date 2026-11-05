@@ -31,11 +31,17 @@ solved or bypassed. The other three documents are verified source documents.
 
 ## Extraction and comparability review
 
-- Hindi: real Devanagari text is present, but the embedded font-to-Unicode map
-  drops matras and substitutes some glyphs. Samples such as `िव ीय िश ा` show
-  that nonempty extraction is not equivalent to clean extraction.
+- Hindi: v1's standard extraction produced 98 chunks with dropped ligatures and
+  matras. Phase 3.5 decodes the embedded CFF glyph names into 97 versioned v2
+  chunks. The title improves from `िव ीय िश ा पुि का` to
+  `वित्तीय शिक्षा पुस्तिका`. One unresolved replacement glyph and word-level
+  anomalies remain, so the repair is not treated as verified transcription.
 - Tamil: text is substantially readable, including the inflation and Ponzi
   sections, but contains `�`, duplicated words, and spacing artifacts.
+- RBI TAT: v1 produced 5 page-level chunks that could merge adjacent payment
+  systems. Phase 3.5 produces 14 logical incident blocks and 13 indexable
+  row-bounded chunks, preserving UPI transfer, UPI merchant, and AePS rows
+  separately. Blank extracted cells remain blank; no values are inferred.
 - The Hindi and Tamil tables of contents both enumerate the same broad 15-topic
   structure as the English SEBI booklet: personal finance, planning, savings,
   securities, insurance, retirement, borrowing, schemes, tax, Ponzi/unregistered
