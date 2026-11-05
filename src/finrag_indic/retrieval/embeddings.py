@@ -121,6 +121,10 @@ class BgeM3Embedder:
                 raise EmbeddingError(f"failed to load {self.model_id}@{self.revision}: {exc}") from exc
         return self._model
 
+    def load(self) -> None:
+        """Load and validate model metadata before other native retrieval libraries."""
+        self._load()
+
     def embed(self, texts: list[str], *, batch_size: int) -> np.ndarray:
         if not texts:
             return np.empty((0, self.metadata.dimension), dtype=np.float32)

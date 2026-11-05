@@ -85,3 +85,28 @@ Observed but not formally evaluated:
   English, Hindi, and Tamil questions in v2. These are candidate observations,
   not gold judgments or comparative effectiveness results.
 - Zero mappings are human-approved, so all Recall@K results remain null.
+
+## Phase 4
+
+Implemented and tested:
+
+- Manual English, Hindi, and Tamil selection through the API and Streamlit.
+- Lazy BGE-M3 retrieval from `multilingual-genuine-v2` and actual chunk/page/URL
+  citation resolution.
+- Configurable async OpenAI SDK provider with explicit model and credential,
+  timeout, SDK retry budget, generation settings, and optional base URL.
+- Deterministic mock provider for local demonstrations and tests.
+- Evidence-only prompt, insufficient-evidence marker, generated citation-marker
+  validation, credential-like input rejection, and structured provider errors.
+- Functional `/chat`, `/health`, `/system/status`, Streamlit chat history, source
+  expansion, backend status, loading feedback, and clear-chat.
+- Fifteen real-index demonstration requests across five topics and three
+  languages. Answers were deterministic mock outputs; retrieval passages and
+  citations were real.
+
+Not experimentally validated:
+
+- Hosted-model answer quality, latency, cost, or availability. No credential or
+  hosted model was configured during Phase 4 verification.
+- Claim-level citation entailment or comparative RAG effectiveness.
+- Formal retrieval Recall, because no evidence mappings are human-approved.

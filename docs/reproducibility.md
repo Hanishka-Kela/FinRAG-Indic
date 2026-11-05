@@ -115,3 +115,33 @@ The evaluator currently reports zero evaluated variants and null Recall@1/3/5
 for both indexes, every language, and every topic because all evidence mappings
 are unverified. See `docs/methodology.md` for the review gate.
 
+## Phase 4 chatbot
+
+Deterministic tests require no network or API credential:
+
+```bash
+uv run pytest
+```
+
+Run the real-index, deterministic-provider demonstration with:
+
+```bash
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 TOKENIZERS_PARALLELISM=false \
+  uv run python scripts/run_phase4_demo.py
+```
+
+This writes 15 raw API responses to the Git-ignored
+`results/raw/phase4_demo.json`. The answer text is a mock fixture; retrieved
+passages, scores, IDs, pages, and URLs come from the actual v2 index.
+
+Hosted execution requires explicit account configuration. No default hosted
+model is assumed:
+
+```bash
+FINRAG_LLM_PROVIDER=openai \
+FINRAG_LLM_MODEL=<account-available-model> \
+FINRAG_LLM_API_KEY=<secret> \
+FINRAG_RUN_LIVE_LLM=1 \
+  uv run pytest -m live tests/live/test_live_openai_provider.py
+```
+

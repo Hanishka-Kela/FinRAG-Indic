@@ -4,7 +4,7 @@ from finrag_indic.contracts import ProviderRequest, ProviderResponse
 
 
 class TextProvider(Protocol):
-    """Replaceable boundary for a future text-generation provider."""
+    """Replaceable asynchronous boundary for grounded text generation."""
 
-    def invoke(self, request: ProviderRequest) -> ProviderResponse: ...
+    async def generate(self, request: ProviderRequest) -> ProviderResponse: ...
 

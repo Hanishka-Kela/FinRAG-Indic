@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field, HttpUrl, field_validator
@@ -24,10 +25,14 @@ class Settings(BaseSettings):
     api_port: int = Field(default=8000, ge=1, le=65535)
     frontend_api_url: HttpUrl = HttpUrl("http://127.0.0.1:8000")
 
-    llm_provider: str = "mock"
+    llm_provider: Literal["mock", "openai"] = "mock"
     llm_base_url: HttpUrl | None = None
     llm_model: str | None = None
     llm_api_key: str | None = Field(default=None, repr=False)
+    llm_temperature: float | None = Field(default=0.2, ge=0, le=2)
+    llm_max_output_tokens: int = Field(default=600, ge=64, le=4096)
+    llm_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
+    llm_max_retries: int = Field(default=2, ge=0, le=10)
 
     embedding_model: str = "BAAI/bge-m3"
     embedding_revision: str = "5617a9f61b028005a4858fdac845db406aefb181"
@@ -37,6 +42,9 @@ class Settings(BaseSettings):
     chunk_overlap: int = Field(default=75, ge=0, le=500)
     min_chunk_tokens: int = Field(default=20, ge=1, le=500)
     retrieval_top_k: int = Field(default=5, ge=1, le=100)
+    retrieval_index_path: Path = Path("data/indexes/multilingual-genuine-v2")
+    chat_max_question_chars: int = Field(default=2000, ge=100, le=2000)
+    frontend_request_timeout_seconds: float = Field(default=90.0, gt=0, le=600)
 
     @field_validator("chunk_overlap")
     @classmethod
@@ -54,7 +62,7 @@ class Settings(BaseSettings):
             raise ValueError("min_chunk_tokens cannot exceed chunk_size")
         return value
 
-    @field_validator("llm_model", "llm_api_key", mode="before")
+    @field_validator("llm_model", "llm_api_key", "llm_temperature", mode="before")
     @classmethod
     def empty_string_to_none(cls, value: object) -> object:
         if isinstance(value, str) and not value.strip():

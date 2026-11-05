@@ -36,19 +36,40 @@ experimentally validated behavior remain distinct.
 - A 15-question/45-variant review benchmark and human-verification-gated
   Recall@1/3/5 evaluation script.
 
-**Remaining or proposed:**
+**Implemented in Phase 3.5:**
+
+- CFF glyph-level Hindi extraction repair and row-bounded RBI failed-transaction
+  table extraction.
+- A separate 269-vector `multilingual-genuine-v2` index while preserving the
+  immutable English baseline and v1 index.
+- Reviewer-ready 45-variant workbook and evaluation breakdowns that remain
+  gated to human-approved evidence.
+
+**Implemented in Phase 4:**
+
+- Multilingual RAG pipeline using the pinned BGE-M3 model and
+  `multilingual-genuine-v2` by default.
+- Configurable asynchronous hosted provider through the official OpenAI SDK,
+  plus the deterministic mock used by default for local development and tests.
+- Grounded prompting, citation-marker validation, conservative abstention, and
+  sensitive financial-information rejection.
+- `POST /chat`, `GET /health`, and `GET /system/status` FastAPI endpoints.
+- Functional Streamlit chat, manual English/Hindi/Tamil selection, history,
+  source expanders, backend status, loading state, and clear-chat control.
+
+**Remaining or not experimentally validated:**
 
 - NPCI acquisition: the approved exact endpoint returned HTTP 403 and was not
   replaced or bypassed. RBI and SEBI PDFs were acquired and verified.
-- Human review of the noisy Hindi extraction, drafted Hindi/Tamil questions, and
-  all candidate evidence mappings.
-- LLM-backed answer generation and citations.
+- Human review of repaired Hindi text, drafted Hindi/Tamil questions, and all
+  candidate evidence mappings.
+- Hosted-model quality, latency, and cost. No hosted model is assumed available
+  and no live provider result is reported without configured access.
 - FABRIC-derived, human-reviewed evaluation records.
 - Full experiments A-C and formal evaluation metrics. Experiment D currently
   has only an exploratory, ungraded direct-retrieval pilot.
 
-Nothing in the second list should be interpreted as completed or experimentally
-validated.
+Items listed as remaining are not implemented or experimentally validated.
 
 ## Requirements
 
@@ -72,7 +93,8 @@ uv run uvicorn finrag_indic.api.app:app --reload --host 127.0.0.1 --port 8000
 ```
 
 The health endpoint is available at <http://127.0.0.1:8000/health> and the
-interactive API documentation at <http://127.0.0.1:8000/docs>.
+interactive API documentation at <http://127.0.0.1:8000/docs>. Runtime readiness
+is available at <http://127.0.0.1:8000/system/status>.
 
 ## Run the frontend
 
@@ -83,7 +105,8 @@ uv run streamlit run frontend/streamlit_app.py
 ```
 
 The frontend reads `FINRAG_FRONTEND_API_URL`, which defaults to
-`http://127.0.0.1:8000`.
+`http://127.0.0.1:8000`. The first chat request loads BGE-M3 and may be slower
+than subsequent requests.
 
 ## Run tests
 
@@ -95,6 +118,17 @@ Run the optional real-model test only after downloading the pinned weights:
 
 ```bash
 FINRAG_RUN_LIVE_BGE=1 uv run pytest -m live tests/live/test_bge_m3.py
+```
+
+Run the hosted-provider smoke test only with an explicitly configured model and
+credential:
+
+```bash
+FINRAG_LLM_PROVIDER=openai \
+FINRAG_LLM_MODEL=<account-available-model> \
+FINRAG_LLM_API_KEY=<secret> \
+FINRAG_RUN_LIVE_LLM=1 \
+uv run pytest -m live tests/live/test_live_openai_provider.py
 ```
 
 ## Phase 3 data workflow
@@ -121,11 +155,35 @@ translations, regulations, or citations.
 Tests requiring live APIs must use the `live` marker and are never part of the
 default deterministic test suite unless explicitly selected.
 
-## Configuration
+## Hosted LLM configuration
 
-All application settings use the `FINRAG_` prefix. See `.env.example` for the
-supported Phase 2 settings. The hosted LLM provider and model are intentionally
-unset; `mock` is the safe default and performs no inference.
+All application settings use the `FINRAG_` prefix. The hosted model remains
+intentionally unset because model availability is account-specific. To enable a
+configured provider, set:
+
+```dotenv
+FINRAG_LLM_PROVIDER=openai
+FINRAG_LLM_MODEL=<model-available-to-your-account>
+FINRAG_LLM_API_KEY=<secret>
+```
+
+Optional base URL, temperature, output-token, timeout, and retry settings are
+listed in `.env.example`. Never commit `.env` or credentials. `mock` remains the
+safe local default and performs no model inference.
+
+## Phase 4 demonstration
+
+The deterministic demonstration exercises real v2 retrieval and citations for
+five topics in all three languages:
+
+```bash
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+uv run python scripts/run_phase4_demo.py
+```
+
+Add `--use-configured-provider` only when hosted access is configured. Mock
+answers are engineering fixtures and must not be presented as hosted-model
+quality results.
 
 ## Research integrity
 

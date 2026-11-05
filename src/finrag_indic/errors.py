@@ -46,3 +46,17 @@ class IndexCompatibilityError(FinRAGError):
 class EmptyCorpusError(FinRAGError):
     pass
 
+
+class ProviderConfigurationError(FinRAGError):
+    pass
+
+
+class ProviderRequestError(FinRAGError):
+    def __init__(self, message: str, *, retryable: bool = False) -> None:
+        super().__init__(message)
+        self.retryable = retryable
+
+
+class RetrievalUnavailableError(FinRAGError):
+    pass
+
