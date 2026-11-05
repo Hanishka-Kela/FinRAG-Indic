@@ -7,7 +7,7 @@ from finrag_indic.errors import ProviderConfigurationError, ProviderRequestError
 
 
 class OpenAIProvider:
-    """Hosted provider backed by the official asynchronous OpenAI SDK."""
+    """Hosted provider using an OpenAI-compatible asynchronous chat API."""
 
     def __init__(self, settings: Settings) -> None:
         if not settings.llm_api_key:
@@ -33,13 +33,15 @@ class OpenAIProvider:
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
         parameters: dict[str, object] = {
             "model": self.model,
-            "input": request.prompt,
-            "max_output_tokens": self.max_output_tokens,
+            "messages": [{"role": "user", "content": request.prompt}],
+            "max_tokens": self.max_output_tokens,
         }
         if self.temperature is not None:
             parameters["temperature"] = self.temperature
         try:
-            response = await self.client.responses.create(**parameters)  # type: ignore[arg-type]
+            response = await self.client.chat.completions.create(
+                **parameters
+            )  # type: ignore[arg-type]
         except openai.AuthenticationError as exc:
             raise ProviderConfigurationError(
                 "The hosted LLM rejected the configured credential"
@@ -60,7 +62,11 @@ class OpenAIProvider:
             ) from exc
         except openai.APIError as exc:
             raise ProviderRequestError("The hosted LLM request failed") from exc
-        output_text = getattr(response, "output_text", None)
+        choices = getattr(response, "choices", None)
+        output_text = None
+        if choices:
+            message = getattr(choices[0], "message", None)
+            output_text = getattr(message, "content", None)
         if not isinstance(output_text, str):
             raise ProviderRequestError("The hosted LLM returned no text")
         output_text = output_text.strip()

@@ -34,7 +34,7 @@ def test_openai_provider_requires_explicit_model() -> None:
         OpenAIProvider(settings)
 
 
-class FakeResponses:
+class FakeCompletions:
     def __init__(self, *, error: Exception | None = None) -> None:
         self.error = error
         self.parameters: dict[str, object] | None = None
@@ -44,12 +44,17 @@ class FakeResponses:
         if self.error:
             raise self.error
         return SimpleNamespace(
-            output_text="Grounded answer [S1]", _request_id="req-test"
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(content="Grounded answer [S1]")
+                )
+            ],
+            _request_id="req-test",
         )
 
 
 @pytest.mark.anyio
-async def test_openai_provider_uses_async_responses_and_generation_settings() -> None:
+async def test_openai_provider_uses_async_chat_completions_and_generation_settings() -> None:
     settings = Settings(
         llm_provider="openai",
         llm_model="account-specific-model",
@@ -63,9 +68,11 @@ async def test_openai_provider_uses_async_responses_and_generation_settings() ->
     provider = OpenAIProvider(settings)
     assert provider.client.timeout == 7
     assert provider.client.max_retries == 4
-    fake_responses = FakeResponses()
+    fake_completions = FakeCompletions()
     original_client = provider.client
-    provider.client = SimpleNamespace(responses=fake_responses)  # type: ignore[assignment]
+    provider.client = SimpleNamespace(
+        chat=SimpleNamespace(completions=fake_completions)
+    )  # type: ignore[assignment]
     await original_client.close()
 
     result = await provider.generate(
@@ -74,10 +81,10 @@ async def test_openai_provider_uses_async_responses_and_generation_settings() ->
 
     assert result.text == "Grounded answer [S1]"
     assert result.request_id == "req-test"
-    assert fake_responses.parameters == {
+    assert fake_completions.parameters == {
         "model": "account-specific-model",
-        "input": "evidence prompt",
-        "max_output_tokens": 321,
+        "messages": [{"role": "user", "content": "evidence prompt"}],
+        "max_tokens": 321,
         "temperature": 0.1,
     }
 
@@ -93,8 +100,12 @@ async def test_openai_timeout_becomes_retryable_provider_error() -> None:
     provider = OpenAIProvider(settings)
     original_client = provider.client
     provider.client = SimpleNamespace(  # type: ignore[assignment]
-        responses=FakeResponses(
-            error=openai.APITimeoutError(httpx.Request("POST", "https://api.test"))
+        chat=SimpleNamespace(
+            completions=FakeCompletions(
+                error=openai.APITimeoutError(
+                    httpx.Request("POST", "https://api.test")
+                )
+            )
         )
     )
     await original_client.close()
@@ -106,8 +117,8 @@ async def test_openai_timeout_becomes_retryable_provider_error() -> None:
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("output_text", [None, 42, ""])
-async def test_openai_provider_rejects_missing_output_text(output_text) -> None:  # type: ignore[no-untyped-def]
+@pytest.mark.parametrize("content", [None, 42, ""])
+async def test_openai_provider_rejects_missing_output_text(content) -> None:  # type: ignore[no-untyped-def]
     settings = Settings(
         llm_provider="openai",
         llm_model="account-specific-model",
@@ -117,8 +128,10 @@ async def test_openai_provider_rejects_missing_output_text(output_text) -> None:
     provider = OpenAIProvider(settings)
     original_client = provider.client
     provider.client = SimpleNamespace(
-        responses=SimpleNamespace(
-            create=lambda **parameters: _response_with_output(output_text)
+        chat=SimpleNamespace(
+            completions=SimpleNamespace(
+                create=lambda **parameters: _response_with_content(content)
+            )
         )
     )  # type: ignore[assignment]
     await original_client.close()
@@ -127,5 +140,8 @@ async def test_openai_provider_rejects_missing_output_text(output_text) -> None:
         await provider.generate(ProviderRequest(prompt="prompt", language="en"))
 
 
-async def _response_with_output(output_text):  # type: ignore[no-untyped-def]
-    return SimpleNamespace(output_text=output_text, _request_id="req-test")
+async def _response_with_content(content):  # type: ignore[no-untyped-def]
+    return SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content=content))],
+        _request_id="req-test",
+    )

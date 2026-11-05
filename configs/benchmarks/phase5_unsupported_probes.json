@@ -1,0 +1,44 @@
+[
+  {
+    "canonical_id": "unsupported-001",
+    "topic": "unsupported live exchange rate",
+    "variants": {
+      "en": {
+        "question": "What is the exact Bitcoin to INR exchange rate today?",
+        "translation_status": "exploratory_probe",
+        "evidence_status": "unsupported_probe"
+      },
+      "hi": {
+        "question": "आज Bitcoin से INR की सटीक विनिमय दर क्या है?",
+        "translation_status": "exploratory_probe",
+        "evidence_status": "unsupported_probe"
+      },
+      "ta": {
+        "question": "இன்று Bitcoin முதல் INR வரையிலான சரியான மாற்று விகிதம் என்ன?",
+        "translation_status": "exploratory_probe",
+        "evidence_status": "unsupported_probe"
+      }
+    }
+  },
+  {
+    "canonical_id": "unsupported-002",
+    "topic": "unsupported personal tax advice",
+    "variants": {
+      "en": {
+        "question": "Which tax strategy will guarantee the highest refund for my personal income?",
+        "translation_status": "exploratory_probe",
+        "evidence_status": "unsupported_probe"
+      },
+      "hi": {
+        "question": "मेरी व्यक्तिगत आय पर सबसे अधिक रिफंड की गारंटी देने वाली कर रणनीति कौन सी है?",
+        "translation_status": "exploratory_probe",
+        "evidence_status": "unsupported_probe"
+      },
+      "ta": {
+        "question": "எனது தனிப்பட்ட வருமானத்திற்கு அதிகபட்ச வரி திருப்பிச் செலுத்தலை உறுதி செய்யும் உத்தி எது?",
+        "translation_status": "exploratory_probe",
+        "evidence_status": "unsupported_probe"
+      }
+    }
+  }
+]

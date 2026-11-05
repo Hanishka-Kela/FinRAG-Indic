@@ -12,6 +12,7 @@ dependencies = [
     "httpx>=0.28,<1",
     "numpy>=2.2,<3",
     "openai>=2.7,<3",
+    "pillow>=11,<13",
     "psutil>=7.1,<8",
     "pyarrow>=26,<27",
     "pydantic>=2.10,<3",

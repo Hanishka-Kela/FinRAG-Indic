@@ -155,6 +155,29 @@ translations, regulations, or citations.
 Tests requiring live APIs must use the `live` marker and are never part of the
 default deterministic test suite unless explicitly selected.
 
+## Phase 5 exploratory evaluation
+
+The Phase 5 runner compares LLM-only, immutable English-baseline RAG, and
+`multilingual-genuine-v2` RAG. It expands common financial abbreviations for
+retrieval, preserves the original question for generation, records retrieval
+observations and citation-reference validity, appends results incrementally,
+and supports resuming completed cases:
+
+```bash
+uv run python scripts/run_phase5_experiment.py --dry-run
+uv run python scripts/run_phase5_experiment.py --limit 3 \
+  --output results/raw/phase5_pilot.jsonl
+uv run python scripts/run_phase5_experiment.py --resume
+uv run python scripts/summarize_phase5.py --input results/raw/phase5_pilot.jsonl
+```
+
+The full benchmark is exploratory: translations and evidence mappings are not
+human-verified, and reviewer score columns remain blank. The separate
+`configs/benchmarks/phase5_unsupported_probes.json` file contains additional
+unsupported probes for abstention analysis. The runner prints the planned
+request count before making provider calls; do not start the full run without
+reviewing quota and cost implications.
+
 ## Hosted LLM configuration
 
 All application settings use the `FINRAG_` prefix. The hosted model remains
@@ -194,4 +217,3 @@ score will be reported without actual experiment output.
 
 See `docs/reproducibility.md` for pinned revisions, artifact locations, and
 integrity checks.
-
