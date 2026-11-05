@@ -3,6 +3,8 @@ from argparse import ArgumentParser
 from datetime import UTC, datetime
 from pathlib import Path
 
+import numpy as np
+
 from finrag_indic.config import get_settings
 from finrag_indic.evaluation.retrieval import BenchmarkQuestion
 from finrag_indic.retrieval.embeddings import BgeM3Embedder
@@ -45,9 +47,11 @@ def main() -> None:
         cache_folder=Path("data/models/sentence-transformers"),
         device=settings.embedding_device,
     )
-    vectors = embedder.embed(
-        [variant.question for _, _, variant in flattened],
-        batch_size=settings.embedding_batch_size,
+    vectors = np.vstack(
+        [
+            embedder.embed([variant.question], batch_size=1)[0]
+            for _, _, variant in flattened
+        ]
     )
     from finrag_indic.retrieval.index import FaissRetriever
 
@@ -55,7 +59,7 @@ def main() -> None:
         "english_baseline_v1": FaissRetriever.load(
             args.english_index, expected_embedding=embedder.metadata
         ),
-        "multilingual_genuine_v1": FaissRetriever.load(
+        args.multilingual_index.name.replace("-", "_"): FaissRetriever.load(
             args.multilingual_index, expected_embedding=embedder.metadata
         ),
     }

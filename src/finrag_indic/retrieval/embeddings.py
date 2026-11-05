@@ -125,13 +125,20 @@ class BgeM3Embedder:
         if not texts:
             return np.empty((0, self.metadata.dimension), dtype=np.float32)
         try:
-            vectors = self._load().encode(
-                texts,
-                batch_size=batch_size,
-                convert_to_numpy=True,
-                normalize_embeddings=True,
-                show_progress_bar=False,
-            )
+            model = self._load()
+            vectors = np.empty((len(texts), self.metadata.dimension), dtype=np.float32)
+            for start in range(0, len(texts), batch_size):
+                stop = min(start + batch_size, len(texts))
+                vectors[start:stop] = np.asarray(
+                    model.encode(
+                        texts[start:stop],
+                        batch_size=batch_size,
+                        convert_to_numpy=True,
+                        normalize_embeddings=True,
+                        show_progress_bar=False,
+                    ),
+                    dtype=np.float32,
+                )
         except EmbeddingError:
             raise
         except Exception as exc:

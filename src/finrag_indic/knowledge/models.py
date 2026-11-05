@@ -101,6 +101,7 @@ class Chunk(BaseModel):
     issuing_organization: str
     source_revision: str | None = None
     coverage_group: str | None = None
+    extraction_method: str = "pymupdf_standard"
     review_flags: list[str] = Field(default_factory=list)
 
 

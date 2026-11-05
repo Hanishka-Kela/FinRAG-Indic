@@ -3,7 +3,11 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from finrag_indic.config import get_settings
-from finrag_indic.evaluation.retrieval import BenchmarkQuestion, calculate_recalls
+from finrag_indic.evaluation.retrieval import (
+    BenchmarkQuestion,
+    EvaluatedRetrieval,
+    summarize_evaluations,
+)
 from finrag_indic.retrieval.embeddings import BgeM3Embedder
 
 
@@ -15,7 +19,12 @@ def main() -> None:
         default=Path("configs/benchmarks/retrieval_v1.json"),
     )
     parser.add_argument(
-        "--index", type=Path, default=Path("data/indexes/multilingual-genuine-v1")
+        "--english-index", type=Path, default=Path("data/indexes/english")
+    )
+    parser.add_argument(
+        "--multilingual-index",
+        type=Path,
+        default=Path("data/indexes/multilingual-genuine-v2"),
     )
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
@@ -29,8 +38,7 @@ def main() -> None:
         for language, variant in question.variants.items()
         if variant.evidence_status == "human_verified"
     ]
-    evaluated: list[tuple[set[str], list[str]]] = []
-    details = []
+    index_results: dict[str, object] = {}
     if verified:
         settings = get_settings()
         embedder = BgeM3Embedder(
@@ -45,22 +53,42 @@ def main() -> None:
         )
         from finrag_indic.retrieval.index import FaissRetriever
 
-        retriever = FaissRetriever.load(args.index, expected_embedding=embedder.metadata)
-        for (canonical_id, language, variant), vector in zip(verified, vectors):
-            retrieved = [
-                hit.chunk.chunk_id for hit in retriever.search(vector, top_k=5)
-            ]
-            gold = set(variant.verified_gold_chunk_ids)
-            evaluated.append((gold, retrieved))
-            details.append(
-                {"canonical_id": canonical_id, "language": language,
-                 "gold_chunk_ids": sorted(gold), "retrieved_chunk_ids": retrieved}
+        topic_by_id = {question.canonical_id: question.topic for question in questions}
+        for label, index_path in {
+            "english_baseline_v1": args.english_index,
+            "multilingual_genuine_v2": args.multilingual_index,
+        }.items():
+            retriever = FaissRetriever.load(index_path, expected_embedding=embedder.metadata)
+            cases: list[EvaluatedRetrieval] = []
+            for (canonical_id, language, variant), vector in zip(verified, vectors):
+                retrieved = [
+                    hit.chunk.chunk_id for hit in retriever.search(vector, top_k=5)
+                ]
+                cases.append(
+                    EvaluatedRetrieval(
+                        canonical_id=canonical_id,
+                        language=language,
+                        topic=topic_by_id[canonical_id],
+                        gold_chunk_ids=set(variant.verified_gold_chunk_ids),
+                        retrieved_chunk_ids=retrieved,
+                    )
+                )
+            index_results[label] = summarize_evaluations(
+                cases,
+                topics=tuple(dict.fromkeys(question.topic for question in questions)),
             )
+    else:
+        empty_summary = summarize_evaluations(
+            [], topics=tuple(dict.fromkeys(question.topic for question in questions))
+        )
+        index_results = {
+            "english_baseline_v1": empty_summary,
+            "multilingual_genuine_v2": empty_summary,
+        }
     payload = {
-        "evaluated_variant_count": len(evaluated),
-        "excluded_unverified_variant_count": 3 * len(questions) - len(evaluated),
-        **calculate_recalls(evaluated),
-        "details": details,
+        "verified_variant_count": len(verified),
+        "excluded_unverified_variant_count": 3 * len(questions) - len(verified),
+        "indexes": index_results,
         "note": "Metrics include only variants explicitly marked human_verified.",
     }
     rendered = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"

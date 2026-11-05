@@ -2,10 +2,12 @@ import hashlib
 import re
 import unicodedata
 from collections import OrderedDict
+from io import BytesIO
 from pathlib import Path
 
 import pymupdf
 from bs4 import BeautifulSoup
+from fontTools.cffLib import CFFFontSet
 
 from finrag_indic.errors import ExtractionError
 from finrag_indic.knowledge.models import (
@@ -88,6 +90,220 @@ def extract_pdf(document: SourceDocument) -> list[ExtractedBlock]:
     return blocks
 
 
+def glyph_name_to_unicode(glyph_name: str) -> str | None:
+    """Decode Adobe-style ``uniXXXX``/``uXXXXX`` glyph names without guessing."""
+    base = glyph_name.split(".", 1)[0]
+    if base.startswith("uni"):
+        payload = base[3:]
+        if payload and len(payload) % 4 == 0 and re.fullmatch(r"[0-9A-Fa-f]+", payload):
+            return "".join(chr(int(payload[index : index + 4], 16)) for index in range(0, len(payload), 4))
+    if base.startswith("u") and re.fullmatch(r"[0-9A-Fa-f]{4,6}", base[1:]):
+        return chr(int(base[1:], 16))
+    return None
+
+
+def repair_devanagari_visual_order(units: list[str]) -> str:
+    """Move visually encoded pre-base i-matras behind their following glyph cluster."""
+    repaired: list[str] = []
+    index = 0
+    while index < len(units):
+        unit = units[index]
+        if unit.startswith("\u093f") and index + 1 < len(units):
+            repaired.append(units[index + 1] + unit)
+            index += 2
+        else:
+            repaired.append(unit)
+            index += 1
+    return "".join(repaired)
+
+
+def _cff_glyph_order(font_bytes: bytes) -> list[str]:
+    cff = CFFFontSet()
+    cff.decompile(BytesIO(font_bytes), None)
+    return list(cff[cff.fontNames[0]].charset)
+
+
+def _page_glyph_orders(document: pymupdf.Document, page: pymupdf.Page) -> dict[str, list[str]]:
+    orders: dict[str, list[str]] = {}
+    for font in page.get_fonts(full=True):
+        xref, extension, _, embedded_name = font[:4]
+        if extension != "cff":
+            continue
+        trace_name = embedded_name.split("+", 1)[-1]
+        try:
+            extracted = document.extract_font(xref, named=True)
+            orders[trace_name] = _cff_glyph_order(extracted["content"])
+        except (KeyError, OSError, ValueError):
+            continue
+    return orders
+
+
+def _trace_character_map(page: pymupdf.Page) -> dict[tuple[str, float, float], list[tuple[int, int]]]:
+    character_map: dict[tuple[str, float, float], list[tuple[int, int]]] = {}
+    for span in page.get_texttrace():
+        if span.get("type") != 0:
+            continue
+        font_name = str(span.get("font", ""))
+        for unicode_value, glyph_id, origin, _ in span.get("chars", ()):
+            key = (font_name, round(float(origin[0]), 3), round(float(origin[1]), 3))
+            character_map.setdefault(key, []).append((unicode_value, glyph_id))
+    return character_map
+
+
+def _decode_raw_character(
+    *,
+    raw_character: dict[str, object],
+    font_name: str,
+    glyph_orders: dict[str, list[str]],
+    trace_characters: dict[tuple[str, float, float], list[tuple[int, int]]],
+) -> str:
+    origin = raw_character["origin"]
+    key = (font_name, round(float(origin[0]), 3), round(float(origin[1]), 3))
+    traced = trace_characters.get(key, [])
+    if not traced:
+        return str(raw_character.get("c", ""))
+    raw_text = str(raw_character.get("c", ""))
+    matching = next(
+        (
+            item
+            for item in traced
+            if len(raw_text) == 1 and item[0] == ord(raw_text)
+        ),
+        None,
+    )
+    if matching is None and raw_text and ord(raw_text[0]) < 32:
+        matching = next((item for item in traced if item[0] == 0xFFFD), None)
+    unicode_value, glyph_id = matching or traced[0]
+    if unicode_value != 0xFFFD:
+        return chr(unicode_value)
+    glyph_order = glyph_orders.get(font_name, [])
+    if 0 <= glyph_id < len(glyph_order):
+        decoded = glyph_name_to_unicode(glyph_order[glyph_id])
+        if decoded is not None:
+            return decoded
+    return "\ufffd"
+
+
+def extract_pdf_devanagari_glyphs(document: SourceDocument) -> list[ExtractedBlock]:
+    """Extract visual-order Devanagari PDFs using their embedded CFF glyph names.
+
+    Unknown glyphs remain U+FFFD so extraction quality remains auditable.
+    """
+    path = _require_source_file(document)
+    try:
+        with pymupdf.open(path) as pdf:
+            blocks: list[ExtractedBlock] = []
+            for page_index, page in enumerate(pdf):
+                glyph_orders = _page_glyph_orders(pdf, page)
+                trace_characters = _trace_character_map(page)
+                lines: list[str] = []
+                raw_page = page.get_text("rawdict", sort=True)
+                for raw_block in raw_page["blocks"]:
+                    if raw_block.get("type") != 0:
+                        continue
+                    for raw_line in raw_block.get("lines", []):
+                        units: list[str] = []
+                        for raw_span in raw_line.get("spans", []):
+                            font_name = str(raw_span.get("font", ""))
+                            for raw_character in raw_span.get("chars", []):
+                                units.append(
+                                    _decode_raw_character(
+                                        raw_character=raw_character,
+                                        font_name=font_name,
+                                        glyph_orders=glyph_orders,
+                                        trace_characters=trace_characters,
+                                    )
+                                )
+                        lines.append(repair_devanagari_visual_order(units))
+                blocks.extend(
+                    _blocks_from_lines(
+                        document=document,
+                        lines=lines,
+                        page_number=page_index + 1,
+                    )
+                )
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise ExtractionError(
+            f"Devanagari glyph extraction failed for {document.document_id}: {exc}"
+        ) from exc
+    if not blocks:
+        raise ExtractionError(f"PDF contains no extractable text: {document.document_id}")
+    return blocks
+
+
+def parse_rbi_table_rows(
+    rows: list[list[str | None]], *, page_number: int, document: SourceDocument
+) -> list[ExtractedBlock]:
+    """Convert a detected RBI TAT table to one block per payment-system incident row."""
+    if len(rows) < 3:
+        return []
+    description_column = next(
+        (index for index, value in enumerate(rows[0]) if value and "Description" in value),
+        2,
+    )
+    timeline_column = next(
+        (index for index, value in enumerate(rows[1]) if value and "Timeline" in value),
+        None,
+    )
+    compensation_column = next(
+        (index for index, value in enumerate(rows[1]) if value and "Compensation" in value),
+        None,
+    )
+    if timeline_column is None or compensation_column is None:
+        return []
+
+    system: str | None = None
+    blocks: list[ExtractedBlock] = []
+    for row in rows[3:]:
+        serial = normalize_text(row[0] or "")
+        if serial.isdigit():
+            candidates = [normalize_text(value or "") for value in row[description_column:]]
+            system = next((value for value in candidates if value), None)
+            continue
+        if serial not in {"a", "b", "c", "d"} or not system:
+            continue
+        incident = normalize_text(row[description_column] or "")
+        timeline = normalize_text(row[timeline_column] or "")
+        compensation = normalize_text(row[compensation_column] or "")
+        if not incident:
+            continue
+        fields = [f"Payment system: {system}", f"Incident: {incident}"]
+        if timeline:
+            fields.append(f"Auto-reversal timeline: {timeline}")
+        if compensation:
+            fields.append(f"Compensation: {compensation}")
+        blocks.append(
+            ExtractedBlock(
+                document_id=document.document_id,
+                language=document.language,
+                page_number=page_number,
+                section_heading=f"{system} — row {serial}",
+                text="\n".join(fields),
+            )
+        )
+    return blocks
+
+
+def extract_rbi_failed_transaction_tables(document: SourceDocument) -> list[ExtractedBlock]:
+    """Extract the circular's detected tables while preserving logical row boundaries."""
+    path = _require_source_file(document)
+    try:
+        with pymupdf.open(path) as pdf:
+            blocks: list[ExtractedBlock] = []
+            for page_index, page in enumerate(pdf):
+                for table in page.find_tables().tables:
+                    blocks.extend(
+                        parse_rbi_table_rows(
+                            table.extract(), page_number=page_index + 1, document=document
+                        )
+                    )
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise ExtractionError(f"RBI table extraction failed for {document.document_id}: {exc}") from exc
+    if not blocks:
+        raise ExtractionError(f"No RBI TAT table rows detected: {document.document_id}")
+    return blocks
+
+
 def extract_html(document: SourceDocument) -> list[ExtractedBlock]:
     path = _require_source_file(document)
     try:
@@ -137,6 +353,8 @@ def chunk_blocks(
     chunk_size: int,
     overlap: int,
     min_chunk_tokens: int = 1,
+    preserve_section_boundaries: bool = False,
+    extraction_method: str = "pymupdf_standard",
 ) -> list[Chunk]:
     if (
         chunk_size <= 0
@@ -153,7 +371,9 @@ def chunk_blocks(
     for block in blocks:
         key = (
             block.page_number,
-            None if block.page_number is not None else block.section_heading,
+            block.section_heading
+            if preserve_section_boundaries
+            else (None if block.page_number is not None else block.section_heading),
         )
         group = grouped.setdefault(
             key,
@@ -220,6 +440,7 @@ def chunk_blocks(
                     issuing_organization=document.issuing_organization,
                     source_revision=document.source_revision,
                     coverage_group=document.coverage_group,
+                    extraction_method=extraction_method,
                     review_flags=_currency_review_flags(document, text),
                 )
             )

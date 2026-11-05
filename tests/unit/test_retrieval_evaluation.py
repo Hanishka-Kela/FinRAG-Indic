@@ -4,8 +4,10 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from finrag_indic.evaluation.retrieval import (
+    EvaluatedRetrieval,
     QuestionVariant,
     calculate_recalls,
+    summarize_evaluations,
 )
 
 
@@ -30,6 +32,33 @@ def test_no_verified_questions_produces_no_metrics() -> None:
         "recall_at_3": None,
         "recall_at_5": None,
     }
+
+
+def test_evaluation_reports_language_topic_and_failures() -> None:
+    cases = [
+        EvaluatedRetrieval(
+            canonical_id="q1",
+            language="hi",
+            topic="upi",
+            gold_chunk_ids={"gold"},
+            retrieved_chunk_ids=["x", "gold", "z"],
+        ),
+        EvaluatedRetrieval(
+            canonical_id="q2",
+            language="en",
+            topic="fraud",
+            gold_chunk_ids={"missing"},
+            retrieved_chunk_ids=["x", "y", "z"],
+        ),
+    ]
+
+    summary = summarize_evaluations(cases, topics=("upi", "fraud"))
+
+    assert summary["overall"]["recall_at_3"] == 0.5
+    assert summary["per_language"]["hi"]["recall_at_3"] == 1.0
+    assert summary["per_language"]["ta"]["recall_at_3"] is None
+    assert summary["per_topic"]["fraud"]["recall_at_5"] == 0.0
+    assert summary["retrieval_failures_at_5"][0]["canonical_id"] == "q2"
 
 
 def test_unverified_variant_cannot_contain_gold_evidence() -> None:
