@@ -1,3 +1,7 @@
+from datetime import datetime
+from pathlib import Path
+
+
 class FinRAGError(Exception):
     """Base class for expected application errors."""
 
@@ -14,11 +18,17 @@ class AcquisitionError(FinRAGError):
         http_status: int | None = None,
         content_type: str | None = None,
         resolved_source_url: str | None = None,
+        retrieval_timestamp: datetime | None = None,
+        sha256: str | None = None,
+        local_file_path: Path | None = None,
     ) -> None:
         super().__init__(message)
         self.http_status = http_status
         self.content_type = content_type
         self.resolved_source_url = resolved_source_url
+        self.retrieval_timestamp = retrieval_timestamp
+        self.sha256 = sha256
+        self.local_file_path = local_file_path
 
 
 class ExtractionError(FinRAGError):

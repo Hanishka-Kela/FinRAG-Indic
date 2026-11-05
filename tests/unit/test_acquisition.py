@@ -6,6 +6,7 @@ import pytest
 
 from finrag_indic.errors import AcquisitionError
 from finrag_indic.knowledge.acquisition import SourceDownloader
+from finrag_indic.knowledge.acquisition import OFFICIAL_DOMAINS
 from finrag_indic.knowledge.models import (
     ApprovalStatus,
     ExtractionStatus,
@@ -70,4 +71,32 @@ def test_downloader_preserves_http_failure_metadata(tmp_path: Path) -> None:
     assert raised.value.http_status == 403
     assert raised.value.content_type == "text/html"
     assert raised.value.resolved_source_url == "https://www.npci.org.in/test"
+
+
+def test_approved_legacy_rbi_host_is_allowlisted() -> None:
+    assert "old.rbi.org.in" in OFFICIAL_DOMAINS
+
+
+def test_downloader_rejects_antibot_html(tmp_path: Path) -> None:
+    content = (
+        b"<html><body><p>Please enable JavaScript to view the page content.</p>"
+        b"<p>What code is in the image?</p><p>Your support ID is: 1234567890.</p>"
+        b"</body></html>"
+    )
+    transport = httpx.MockTransport(
+        lambda request: httpx.Response(
+            200,
+            content=content,
+            headers={"content-type": "text/html"},
+            request=request,
+        )
+    )
+    with httpx.Client(transport=transport) as client:
+        with pytest.raises(AcquisitionError, match="anti-bot challenge") as raised:
+            SourceDownloader(client).download(source(True), tmp_path)
+
+    assert raised.value.http_status == 200
+    assert raised.value.sha256 == hashlib.sha256(content).hexdigest()
+    assert raised.value.local_file_path is not None
+    assert raised.value.local_file_path.read_bytes() == content
 

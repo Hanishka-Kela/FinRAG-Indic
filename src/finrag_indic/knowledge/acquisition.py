@@ -24,6 +24,7 @@ OFFICIAL_DOMAINS = {
     "www.sebi.gov.in",
     "sebi.gov.in",
     "investor.sebi.gov.in",
+    "old.rbi.org.in",
 }
 
 
@@ -97,7 +98,32 @@ class SourceDownloader:
                     f"(content-type={content_type!r})"
                 )
             soup = BeautifulSoup(content, "html.parser")
+            for element in soup(["script", "style", "noscript"]):
+                element.decompose()
             visible_text = soup.get_text(" ", strip=True)
+            challenge_markers = (
+                "what code is in the image",
+                "please enable javascript to view the page content",
+                "your support id is:",
+            )
+            lowered_text = visible_text.casefold()
+            if any(marker in lowered_text for marker in challenge_markers):
+                target = (
+                    raw_root
+                    / source.issuing_organization.lower()
+                    / f"{source.document_id}.html"
+                )
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(content)
+                raise AcquisitionError(
+                    f"{source.document_id} returned an anti-bot challenge instead of content",
+                    http_status=response.status_code,
+                    content_type=content_type,
+                    resolved_source_url=str(response.url),
+                    retrieval_timestamp=datetime.now(UTC),
+                    sha256=hashlib.sha256(content).hexdigest(),
+                    local_file_path=target,
+                )
             if len(visible_text) < 100:
                 raise AcquisitionError(
                     f"{source.document_id} HTML has insufficient visible content"

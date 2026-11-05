@@ -35,3 +35,35 @@ The raw, unabridged records are written to
 against the “multilingual” view, but its source set is currently identical to the
 English view, so its scores are identical and do not establish translation or
 multilingual-corpus gains.
+
+## Phase 3 extension comparison — 2026-11-05
+
+The extension compares the unchanged 107-vector English baseline with the
+separate 262-vector `multilingual-genuine-v1` index. The latter contains 112
+English, 98 Hindi, and 52 Tamil chunks. All 45 question variants are exploratory
+and ungraded.
+
+Observed top-rank document languages in the multilingual index were 35 English,
+10 Tamil, and 0 Hindi. This distribution is not an effectiveness score. It also
+exposes the likely effect of Hindi extraction corruption.
+
+Selected actual results:
+
+| Query | English baseline top hit | Genuine multilingual top hit |
+|---|---|---|
+| English UPI merchant failure | RBI FAME p.25, score 0.571627 | RBI TAT circular p.5, score 0.670841; retrieved table continuation starts with AePS rather than the UPI row, so relevance needs review |
+| Hindi failed UPI transfer | RBI FAME p.25, score 0.604020 | Same RBI FAME chunk and score; the TAT circular was only rank 3, so the specific failure evidence did not reach top 1 |
+| Tamil inflation | English SEBI p.7, score 0.634369 | Tamil SEBI `sebi-financial-education-tamil-e2a2219eb5294c62`, score 0.734598; passage explains price rises and declining purchasing power |
+| Hindi risk/return | RBI FAME p.11, score 0.690219 | Same English RBI passage and score; no Hindi chunk reached top 1 |
+| Tamil Ponzi warning | English SEBI p.55, score 0.618615 | Tamil SEBI `sebi-financial-education-tamil-8434c27c87999b0d`, score 0.668060; passage describes Ponzi structure, with visible extraction artifacts |
+
+The circular improves coverage of failed-payment rules, but table extraction
+mixes adjacent payment-system rows. The failed-transfer query remains a failure
+at top 1 in every language. Tamil same-language retrieval shows several plausible
+examples; Hindi same-language retrieval is limited by text quality. None of these
+observations is a relevance judgment or a multilingual effectiveness claim.
+
+The complete review artifact is
+`configs/benchmarks/retrieval_v1_candidates.json`. It contains top-five passages,
+scores, chunk IDs, document IDs, language, page, URL, and flags for both indexes.
+All 45 records remain `candidate_unverified`; Recall@1/3/5 are therefore null.

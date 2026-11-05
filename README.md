@@ -31,13 +31,17 @@ experimentally validated behavior remain distinct.
   compatibility metadata.
 - Separate English and multilingual corpus views and exploratory multilingual
   retrieval-pilot tooling.
+- A checksum-locked 107-chunk English baseline and a separate 262-vector genuine
+  multilingual extension index (112 English, 98 Hindi, 52 Tamil).
+- A 15-question/45-variant review benchmark and human-verification-gated
+  Recall@1/3/5 evaluation script.
 
 **Remaining or proposed:**
 
 - NPCI acquisition: the approved exact endpoint returned HTTP 403 and was not
   replaced or bypassed. RBI and SEBI PDFs were acquired and verified.
-- A genuine Hindi/Tamil regulator corpus; the current multilingual view contains
-  only genuine English source material.
+- Human review of the noisy Hindi extraction, drafted Hindi/Tamil questions, and
+  all candidate evidence mappings.
 - LLM-backed answer generation and citations.
 - FABRIC-derived, human-reviewed evaluation records.
 - Full experiments A-C and formal evaluation metrics. Experiment D currently

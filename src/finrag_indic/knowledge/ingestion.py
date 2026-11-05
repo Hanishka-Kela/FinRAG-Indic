@@ -234,6 +234,8 @@ def _currency_review_flags(document: SourceDocument, text: str) -> list[str]:
     """Flag date-sensitive content for review without deciding its legal currency."""
     normalized = text.casefold()
     flags: list[str] = []
+    if document.document_id == "rbi-failed-transactions-tat-2019":
+        flags.append("currency_verification_inconclusive_check_amendments")
     if document.issuing_organization == "RBI" and "ombudsman" in normalized:
         flags.append("potentially_superseded_ombudsman_process")
     if document.issuing_organization == "SEBI" and "scores" in normalized:

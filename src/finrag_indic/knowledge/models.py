@@ -28,6 +28,7 @@ class ApprovalStatus(StrEnum):
 class TranslationKind(StrEnum):
     ORIGINAL = "original"
     OFFICIAL_TRANSLATION = "official_translation"
+    OFFICIAL_LANGUAGE_EDITION = "official_language_edition"
     MACHINE_TRANSLATION = "machine_translation"
 
 

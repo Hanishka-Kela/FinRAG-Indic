@@ -41,3 +41,21 @@
 - Hosted LLM selection, answer generation, and Phase 4 experiments A–C.
 
 No LLM generation was implemented in Phase 3.
+
+## Phase 3 extension
+
+Implemented:
+
+- Immutable checksum lock for the 107-chunk English baseline.
+- Separate 262-vector genuine multilingual index with original regulator
+  documents in English, Hindi, and Tamil.
+- Anti-bot response detection and preservation as failed acquisition evidence.
+- Fifteen canonical questions with 45 explicitly unverified language variants.
+- Candidate evidence review artifact covering both indexes.
+- Recall@1/3/5 evaluator gated to human-verified mappings only.
+
+Experimentally observed but not formally evaluated:
+
+- Tamil documents reached rank 1 for 10/45 exploratory variants; Hindi documents
+  reached rank 1 for 0/45. Extraction quality is a major confounder.
+- No evidence mapping is verified, so formal recall values remain null.

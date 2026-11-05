@@ -1,0 +1,11 @@
+{
+  "baseline_id": "english-v1-107",
+  "vector_count": 107,
+  "index_path": "data/indexes/english",
+  "files": {
+    "vectors.faiss": "114dd0c5b6e193895bd07be26b8b7c3589c4d04c0134871755e2f7c1d541816b",
+    "chunks.jsonl": "80014cb72735447f4428fd22270a495ced81e57956a96ba3099df676d21fedb7",
+    "metadata.json": "5373bdb8cde5b28fb474cabcb351a3a4404baf7636f329b4805a25fb96a0d13c"
+  },
+  "immutable_for_phase3_extension": true
+}

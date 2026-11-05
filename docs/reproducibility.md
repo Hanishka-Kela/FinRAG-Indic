@@ -25,22 +25,35 @@ The generated review template defaults every verification field to
 
 ## Sources and indexes
 
-The manifest contains only the three explicitly approved URLs. Acquisition
-continues after a per-source failure and records the error without substitution:
+The original manifest contains three approved URLs. The extension manifest
+contains exactly four separately approved URLs. Acquisition continues after a
+per-source failure and records the error without substitution:
 
 ```bash
 uv run python scripts/acquire_sources.py
 uv run python scripts/build_indexes.py
 uv run python scripts/run_retrieval_pilot.py
+
+# Phase 3 extension only
+uv run python scripts/acquire_sources.py \
+  --manifest configs/sources_extension.json \
+  --raw-root data/raw/sources-extension
+HF_HUB_OFFLINE=1 uv run python scripts/build_multilingual_extension.py
+HF_HUB_OFFLINE=1 uv run python scripts/prepare_retrieval_benchmark.py
+HF_HUB_OFFLINE=1 uv run python scripts/evaluate_retrieval.py
 ```
 
 Raw sources, embeddings, FAISS indexes, and raw outputs are Git-ignored.
 Manifests, code, schemas, and pinned revisions are versioned.
 
-The observed build produced 107 vectors in each index (33 RBI and 74 SEBI).
-`data/indexes/*/metadata.json` pins the embedding metadata and chunk-list hash.
-The multilingual view is English-only until genuine approved Hindi/Tamil source
-versions are acquired.
+The initial English build produced 107 vectors (33 RBI and 74 SEBI). Its three
+artifact hashes are locked in `configs/baselines/english_v1.json`; the extension
+builder refuses to proceed if any differs. The extension produced 262 vectors:
+112 English, 98 Hindi, and 52 Tamil. It is stored separately at
+`data/indexes/multilingual-genuine-v1`.
+
+The rejected FAQ challenge response is preserved and checksummed but marked
+failed. It contributes no chunks.
 
 ## Real BGE-M3 verification
 
@@ -77,4 +90,9 @@ chunk IDs.
 
 The durable abridged report is in `docs/retrieval_pilot.md`; the complete raw
 passages, scores, source IDs, URLs, and modes are in the ignored JSONL artifact.
+
+The extension benchmark has 15 canonical questions and 45 variants. Candidate
+passages are in `configs/benchmarks/retrieval_v1_candidates.json`. The evaluator
+currently reports zero evaluated variants and null Recall@1/3/5 because all
+evidence mappings are unverified. See `docs/methodology.md` for the review gate.
 
